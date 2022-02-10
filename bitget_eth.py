@@ -541,7 +541,7 @@ import logging
 import threading
 import time
 
-startAuto('SBTCSUSDT_SUMCBL')
+startAuto('SETHSUSDT_SUMCBL')
 
 for i in tickers:
     t = threading.Thread(target=startAuto, args=(i,)) 
