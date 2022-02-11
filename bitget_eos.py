@@ -265,7 +265,7 @@ def candles15():
     gold = line10<0 and line30>0
         
 def startAuto(ticker):
-    isGoldenCross = True
+    isGoldenCross = False
     isDeadCross = False
     cciLow = False
     cciHight = False
