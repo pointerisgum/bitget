@@ -552,6 +552,7 @@ import logging
 import threading
 import time
 
+bot.sendMessage(chat_id="-796323955", text='start btc')
 startAuto('SBTCSUSDT_SUMCBL')
 
 for i in tickers:

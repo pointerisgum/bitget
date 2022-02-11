@@ -552,6 +552,7 @@ import logging
 import threading
 import time
 
+bot.sendMessage(chat_id="-796323955", text='start eth')
 startAuto('SETHSUSDT_SUMCBL')
 
 for i in tickers:

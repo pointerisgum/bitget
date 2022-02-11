@@ -241,10 +241,9 @@ def startAuto(ticker):
 
         cci_data = get_cci(cci_candle_data, 100)
         cci = cci_data[-2]['CCI']
-        print('cci: ', cci)
         
         currentPrice = candle_data[-1][4]
-        print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice)
+        print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice, cci)
 
         df = pd.DataFrame(candle_data)
         # df=df['trade_price'].iloc[::-1]
@@ -552,6 +551,7 @@ import logging
 import threading
 import time
 
+bot.sendMessage(chat_id="-796323955", text='start eos')
 startAuto('SEOSSUSDT_SUMCBL')
 
 for i in tickers:
