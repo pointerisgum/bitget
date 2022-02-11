@@ -17,13 +17,14 @@ import bitget.mix.order_api as order
 import bitget.mix.plan_api as plan
 import bitget.mix.trace_api as trace
 import datetime as pydatetime
+import schedule
 
 api_key = "bg_f4ae7e0a6fab17130de0641afb1cda61"
 secret_key = "e9a1b99d7ef0cbe0a428afacbc0480ff73c9812e89481f0ec2199af6be9359a3"
 passphrase = "bitgetcci"
 
-symbol = 'BTCUSDT_UMCBL'
-
+# symbol = 'BTCUSDT_UMCBL'
+ticker = 'SETHSUSDT_SUMCBL'
 
 access = "xwdEMciw0PeGRfpA8xMaVtnVGmFPFxTR6dkKCnUQ"
 secret = "UOxwdGYVZflyTCbMwrlrzB0Ey44GGxSLl70xp8A4"
@@ -41,6 +42,7 @@ marketApi = market.MarketApi(api_key, secret_key, passphrase, use_server_time=Fa
 orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 leverage = 10
+
 
 # try:
 
@@ -208,7 +210,39 @@ def getSize(ticker, myAvailable, currentPrice):
         return size
     return 0
 
+gold = False
+dead = False
 
+def candles15():
+    print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '15min candles call')
+    
+    candle_data = get_candle('SBTCSUSDT_SUMCBL', 900, 100)
+
+    for i in range(0, len(candle_data)):
+        candle_data[i][0] = float(candle_data[i][0])
+        candle_data[i][1] = float(candle_data[i][1])
+        candle_data[i][2] = float(candle_data[i][2])
+        candle_data[i][3] = float(candle_data[i][3])
+        candle_data[i][4] = float(candle_data[i][4])
+
+    global dead
+    global gold
+    global ma10
+    global ma30
+    
+    df = pd.DataFrame(candle_data)
+    # df=df['trade_price'].iloc[::-1]
+    df=df[4].iloc[::1] #4번째가 종가임
+
+    ma10 = df.rolling(window=10).mean()
+    ma30 = df.rolling(window=30).mean()
+
+    line10=ma10.iloc[-3]-ma30.iloc[-3]
+    line30=ma10.iloc[-2]-ma30.iloc[-2]
+    
+    dead = line10>0 and line30<0
+    gold = line10<0 and line30>0
+        
 def startAuto(ticker):
     isGoldenCross = False
     isDeadCross = False
@@ -221,9 +255,9 @@ def startAuto(ticker):
     buyPrice = 0.0        #매수 가격
     totalRate = 0.0       #누적 손익
     
-    while True:        
+    while True:
+        schedule.run_pending()
         cci_candle_data = get_candle(ticker, 300, 100)
-        candle_data = get_candle(ticker, 900, 100)
         
         for i in range(0, len(cci_candle_data)):
             cci_candle_data[i][0] = float(cci_candle_data[i][0])
@@ -232,32 +266,13 @@ def startAuto(ticker):
             cci_candle_data[i][3] = float(cci_candle_data[i][3])
             cci_candle_data[i][4] = float(cci_candle_data[i][4])
 
-        for i in range(0, len(candle_data)):
-            candle_data[i][0] = float(candle_data[i][0])
-            candle_data[i][1] = float(candle_data[i][1])
-            candle_data[i][2] = float(candle_data[i][2])
-            candle_data[i][3] = float(candle_data[i][3])
-            candle_data[i][4] = float(candle_data[i][4])
 
         cci_data = get_cci(cci_candle_data, 100)
         cci = cci_data[-2]['CCI']
         print('cci: ', cci)
         
-        currentPrice = candle_data[-1][4]
+        currentPrice = cci_candle_data[-1][4]
         print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice)
-
-        df = pd.DataFrame(candle_data)
-        # df=df['trade_price'].iloc[::-1]
-        df=df[4].iloc[::1] #4번째가 종가임
-
-        ma10 = df.rolling(window=10).mean()
-        ma30 = df.rolling(window=30).mean()
-
-        line10=ma10.iloc[-3]-ma30.iloc[-3]
-        line30=ma10.iloc[-2]-ma30.iloc[-2]
-        
-        dead = line10>0 and line30<0
-        gold = line10<0 and line30>0
                
         if isBuy == False:
             #한번이라도 골드나 데드가 났고 구매중이 아닐때 상태값이 바뀐 경우
@@ -544,7 +559,7 @@ def startAuto(ticker):
                             isDeadCross = False
                         continue
                     
-        time.sleep(3)                            
+        time.sleep(5)                            
         # time.sleep(len(tickers) * 4)
 
 
@@ -552,13 +567,19 @@ import logging
 import threading
 import time
 
-bot.sendMessage(chat_id="-796323955", text='start eth')
-startAuto('SETHSUSDT_SUMCBL')
+# bot.sendMessage(chat_id="-796323955", text='start btc')
+candles15()
+schedule.every().minute.at(":03").do(candles15) # 매분 23초에 job 실행
+# schedule.every(3).seconds.do(lambda: test1()) # 3초마다 job 실행
+# schedule.every().hour.at(":54").do(lambda: candles15()) # 매시간 42분에 작업 실행
 
-for i in tickers:
-    t = threading.Thread(target=startAuto, args=(i,)) 
-    t.start()
-    time.sleep(3)
+
+startAuto(ticker)
+
+# for i in tickers:
+#     t = threading.Thread(target=startAuto, args=(i,)) 
+#     t.start()
+#     time.sleep(3)
 
 
 
