@@ -348,9 +348,8 @@ def startAuto(ticker):
                             print(currentPrice)
 
                             maxPrice = currentPrice
-                            buyPrice = currentPrice
-                            upLinePrice = round(buyPrice + (buyPrice * 0.005), 0)
-                            downLinePrice = round(buyPrice - (buyPrice * 0.007), 0)
+                            upLinePrice = round(currentPrice + (currentPrice * 0.005), 0)
+                            downLinePrice = round(currentPrice - (currentPrice * 0.007), 0)
                             
                             account = accountApi.accounts('sumcbl')
                             myAvailable = float(account['data'][0]['available'])
@@ -383,9 +382,8 @@ def startAuto(ticker):
                             print(currentPrice)
 
                             maxPrice = currentPrice
-                            buyPrice = currentPrice
-                            upLinePrice = round(buyPrice + (buyPrice * 0.007), 0)
-                            downLinePrice = round(buyPrice - (buyPrice * 0.005), 0)
+                            upLinePrice = round(currentPrice + (currentPrice * 0.007), 0)
+                            downLinePrice = round(currentPrice - (currentPrice * 0.005), 0)
                             
                             account = accountApi.accounts('sumcbl')
                             myAvailable = float(account['data'][0]['available'])
