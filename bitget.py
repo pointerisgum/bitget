@@ -244,7 +244,7 @@ def candles15():
     gold = line10<0 and line30>0
         
 def startAuto(ticker):
-    isGoldenCross = False
+    isGoldenCross = True
     isDeadCross = False
     cciLow = False
     cciHight = False
@@ -567,7 +567,9 @@ import logging
 import threading
 import time
 
-# bot.sendMessage(chat_id="-796323955", text='start btc')
+msg = 'start: ', ticker
+bot.sendMessage(chat_id="-796323955", text=msg)
+
 candles15()
 schedule.every().minute.at(":03").do(candles15) # 매분 23초에 job 실행
 # schedule.every(3).seconds.do(lambda: test1()) # 3초마다 job 실행
