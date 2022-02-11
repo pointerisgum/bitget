@@ -95,7 +95,7 @@ tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
 def get_candle(ticker, time, count):
     endTime = int(pydatetime.datetime.now().timestamp())
     try:
-        candles = marketApi.candles(ticker, granularity=900,startTime=(endTime * 1000) - ((time*1000)*count), endTime=endTime * 1000) #15분봉 200개
+        candles = marketApi.candles(ticker, granularity=time,startTime=(endTime * 1000) - ((time*1000)*count), endTime=endTime * 1000) #15분봉 200개
         return candles
     except Exception:
         raise
@@ -222,8 +222,16 @@ def startAuto(ticker):
     totalRate = 0.0       #누적 손익
     
     while True:        
+        cci_candle_data = get_candle(ticker, 300, 100)
         candle_data = get_candle(ticker, 900, 100)
         
+        for i in range(0, len(cci_candle_data)):
+            cci_candle_data[i][0] = float(cci_candle_data[i][0])
+            cci_candle_data[i][1] = float(cci_candle_data[i][1])
+            cci_candle_data[i][2] = float(cci_candle_data[i][2])
+            cci_candle_data[i][3] = float(cci_candle_data[i][3])
+            cci_candle_data[i][4] = float(cci_candle_data[i][4])
+
         for i in range(0, len(candle_data)):
             candle_data[i][0] = float(candle_data[i][0])
             candle_data[i][1] = float(candle_data[i][1])
@@ -231,8 +239,9 @@ def startAuto(ticker):
             candle_data[i][3] = float(candle_data[i][3])
             candle_data[i][4] = float(candle_data[i][4])
 
-        cci_data = get_cci(candle_data, 100)
-        cci = cci_data[-1]['CCI']
+        cci_data = get_cci(cci_candle_data, 100)
+        cci = cci_data[-2]['CCI']
+        print('cci: ', cci)
         
         currentPrice = candle_data[-1][4]
         print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice)
@@ -285,8 +294,8 @@ def startAuto(ticker):
 
             #한번도 골드나 데드가 안난 경우
             if isGoldenCross == False and isDeadCross == False:                
-                cci_data = get_cci(candle_data, 100)
-                cci = cci_data[-1]['CCI']
+                # cci_data = get_cci(candle_data, 100)
+                # cci = cci_data[-1]['CCI']
 
                 if dead:
                     call='데드크로스'
@@ -304,18 +313,18 @@ def startAuto(ticker):
                     # msg = ticker, 'Golden Cross  ', 'CCI:', cci, 'Price:', currentPrice
                     # bot.sendMessage(chat_id="-796323955", text=msg)
             else:
-                cci_data = get_cci(candle_data, 100)
-                cci = cci_data[-2]['CCI']
+                # cci_data = get_cci(candle_data, 100)
+                # cci = cci_data[-2]['CCI']
                 
                 if isGoldenCross == True:
                     #매수 타이밍 잡기 (cci:-100 이하로 떨어지고 다시 -100을 뚫었을때)
                     if cciLow == False:
-                        if cci <= -100:
+                        if cci <= -95:
                             cciLow = True
                             # msg = ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                             # bot.sendMessage(chat_id="-796323955", text=msg)
                     else:
-                        if cci >= -100:
+                        if cci >= -95:
                             # 매수 시점
                             # 여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
                             # currentPrice = candle_data[0]['trade_price']
@@ -345,12 +354,12 @@ def startAuto(ticker):
                 if isDeadCross == True:
                     #매수 타이밍 잡기 (cci:+100 이상으로 올라가고 다시 +100으로 내려 갔을때)
                     if cciHight == False:
-                        if cci >= 100:
+                        if cci >= 95:
                             cciHight = True
                             # msg = ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                             # bot.sendMessage(chat_id="-796323955", text=msg)
                     else:
-                        if cci <= 100:
+                        if cci <= 95:
                             #매수 시점
                             # #여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
                             # currentPrice = candle_data[0]['trade_price']
