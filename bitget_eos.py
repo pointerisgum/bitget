@@ -40,7 +40,7 @@ bot = telegram.Bot(token=teleToken)
 marketApi = market.MarketApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
-leverage = 20
+leverage = 10
 
 # try:
 
@@ -401,7 +401,7 @@ def startAuto(ticker):
 
                     rate = getPer(downLinePrice, buyPrice)
                     totalRate += rate
-                    msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                    msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
                     bot.sendMessage(chat_id="-796323955", text=msg)
 
                     # saveExcel(ticker, currentPrice, buyPrice)
@@ -423,7 +423,7 @@ def startAuto(ticker):
                     else:
                         isGoldenCross = False
                         isDeadCross = False
-
+                    continue
 
                 #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
                 if maxPrice > upLinePrice:
@@ -457,7 +457,7 @@ def startAuto(ticker):
                         else:
                             isGoldenCross = False
                             isDeadCross = False
-
+                        continue
                         
             if isDeadCross == True:
                 #차익
@@ -477,7 +477,7 @@ def startAuto(ticker):
 
                     rate = getPer(upLinePrice, buyPrice) * -1
                     totalRate += rate
-                    msg = ticker, 'Sell Short Stop Loss', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(buyPrice-upLinePrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                    msg = ticker, 'Sell Short Stop Loss', 'CCI:', cci, 'Price:', upLinePrice, 'sum:', round(buyPrice-upLinePrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
                     bot.sendMessage(chat_id="-796323955", text=msg)
                     # saveExcel(ticker, currentPrice, buyPrice)
                     
@@ -498,7 +498,8 @@ def startAuto(ticker):
                     else:
                         isGoldenCross = False
                         isDeadCross = False
-
+                    continue
+                
                 #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
                 if maxPrice < downLinePrice:
                     if currentPrice > maxPrice + (maxPrice * 0.002):
@@ -532,7 +533,7 @@ def startAuto(ticker):
                         else:
                             isGoldenCross = False
                             isDeadCross = False
-
+                        continue
         time.sleep(3)                            
         # time.sleep(len(tickers) * 4)
 
