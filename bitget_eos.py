@@ -210,6 +210,27 @@ def getSize(ticker, myAvailable, currentPrice):
         return size
     return 0
 
+def getUpline(ticker, currentPrice, per):
+    if ticker == 'SBTCSUSDT_SUMCBL':
+        return round(currentPrice + (currentPrice * per), 0)
+    elif ticker == 'SETHSUSDT_SUMCBL':
+        return round(currentPrice + (currentPrice * per), 0)
+    elif ticker == 'SEOSSUSDT_SUMCBL':
+        return round(currentPrice + (currentPrice * per), 3)
+    return 0
+
+    
+def getDownline(ticker, currentPrice, per):
+    if ticker == 'SBTCSUSDT_SUMCBL':
+        return round(currentPrice - (currentPrice * 0.005), 0)
+    elif ticker == 'SETHSUSDT_SUMCBL':
+        return round(currentPrice - (currentPrice * 0.005), 0)
+    elif ticker == 'SEOSSUSDT_SUMCBL':
+        return round(currentPrice - (currentPrice * 0.005), 3)
+    return 0
+
+    
+    
 gold = False
 dead = False
 
@@ -348,8 +369,8 @@ def startAuto(ticker):
                             print(currentPrice)
 
                             maxPrice = currentPrice
-                            upLinePrice = round(currentPrice + (currentPrice * 0.005), 0)
-                            downLinePrice = round(currentPrice - (currentPrice * 0.007), 0)
+                            upLinePrice = getUpline(ticker, currentPrice, 0.005)
+                            downLinePrice = getDownline(ticker, currentPrice, 0.007)
                             
                             account = accountApi.accounts('sumcbl')
                             myAvailable = float(account['data'][0]['available'])
@@ -382,8 +403,8 @@ def startAuto(ticker):
                             print(currentPrice)
 
                             maxPrice = currentPrice
-                            upLinePrice = round(currentPrice + (currentPrice * 0.007), 0)
-                            downLinePrice = round(currentPrice - (currentPrice * 0.005), 0)
+                            upLinePrice = getUpline(ticker, currentPrice, 0.007)
+                            downLinePrice = getDownline(ticker, currentPrice, 0.005)
                             
                             account = accountApi.accounts('sumcbl')
                             myAvailable = float(account['data'][0]['available'])
