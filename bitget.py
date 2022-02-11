@@ -533,7 +533,7 @@ def startAuto(ticker):
                             isGoldenCross = False
                             isDeadCross = False
 
-        time.sleep(1)                            
+        time.sleep(3)                            
         # time.sleep(len(tickers) * 4)
 
 
