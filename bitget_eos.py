@@ -266,7 +266,6 @@ def candles15():
     
     dead = line10>0 and line30<0
     gold = line10<0 and line30>0
-    dead = True
     
 def startAuto(ticker):
     isGoldenCross = False
@@ -448,7 +447,7 @@ def startAuto(ticker):
 
                     rate = getPer(downLinePrice, buyPrice)
                     totalRate += rate
-                    msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                    msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate
                     bot.sendMessage(chat_id="-796323955", text=msg)
 
                     # saveExcel(ticker, currentPrice, buyPrice)
@@ -475,6 +474,8 @@ def startAuto(ticker):
                 #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
                 if maxPrice > upLinePrice:
                     if currentPrice < maxPrice - (maxPrice * 0.002):
+                        print('currentPrice: ', currentPrice, 'maxPrice: ', maxPrice, 'type: ', type(maxPrice), 'max0.2: ', maxPrice + (maxPrice * 0.002))
+
                         #익절
                         closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
                         sellOrderId = closeResult['data']['orderId']
@@ -483,7 +484,7 @@ def startAuto(ticker):
 
                         rate = getPer(sellPrice, buyPrice)
                         totalRate += rate
-                        msg = ticker, 'Sell Long Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(sellPrice-buyPrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                        msg = ticker, 'Sell Long Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(sellPrice-buyPrice, 1), 'Rate: ', rate
                         bot.sendMessage(chat_id="-796323955", text=msg)
                         # saveExcel(ticker, currentPrice, buyPrice)
                         
@@ -524,7 +525,7 @@ def startAuto(ticker):
 
                     rate = getPer(upLinePrice, buyPrice) * -1
                     totalRate += rate
-                    msg = ticker, 'Sell Short Stop Loss', 'CCI:', cci, 'Price:', upLinePrice, 'sum:', round(buyPrice-upLinePrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                    msg = ticker, 'Sell Short Stop Loss', 'CCI:', cci, 'Price:', upLinePrice, 'sum:', round(buyPrice-upLinePrice, 1), 'Rate: ', rate
                     bot.sendMessage(chat_id="-796323955", text=msg)
                     # saveExcel(ticker, currentPrice, buyPrice)
                     
@@ -550,6 +551,8 @@ def startAuto(ticker):
                 #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
                 if maxPrice < downLinePrice:
                     if currentPrice > maxPrice + (maxPrice * 0.002):
+                        print('currentPrice: ', currentPrice, 'maxPrice: ', maxPrice, 'type: ', type(maxPrice), 'max0.2: ', maxPrice + (maxPrice * 0.002))
+                        
                         #익절
                         closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_short', orderType='market', timeInForceValue='normal')
                         sellOrderId = closeResult['data']['orderId']
@@ -559,7 +562,7 @@ def startAuto(ticker):
 
                         rate = getPer(sellPrice, buyPrice) * -1
                         totalRate += rate
-                        msg = ticker, 'Sell Short Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(buyPrice-sellPrice, 1), 'Rate: ', rate, 'TotalRate: ', totalRate
+                        msg = ticker, 'Sell Short Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(buyPrice-sellPrice, 1), 'Rate: ', rate
                         bot.sendMessage(chat_id="-796323955", text=msg)
                         # saveExcel(ticker, currentPrice, buyPrice)
 
