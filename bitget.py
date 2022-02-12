@@ -19,12 +19,16 @@ import bitget.mix.trace_api as trace
 import datetime as pydatetime
 import schedule
 
+
 api_key = "bg_f4ae7e0a6fab17130de0641afb1cda61"
 secret_key = "e9a1b99d7ef0cbe0a428afacbc0480ff73c9812e89481f0ec2199af6be9359a3"
 passphrase = "bitgetcci"
 
-# symbol = 'BTCUSDT_UMCBL'
 ticker = 'SBTCSUSDT_SUMCBL'
+leverage = 10
+check_cci = 20
+
+# symbol = 'BTCUSDT_UMCBL'
 
 access = "xwdEMciw0PeGRfpA8xMaVtnVGmFPFxTR6dkKCnUQ"
 secret = "UOxwdGYVZflyTCbMwrlrzB0Ey44GGxSLl70xp8A4"
@@ -41,7 +45,6 @@ bot = telegram.Bot(token=teleToken)
 marketApi = market.MarketApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
-leverage = 10
 
 
 # try:
@@ -263,7 +266,8 @@ def candles15():
     
     dead = line10>0 and line30<0
     gold = line10<0 and line30>0
-        
+    dead = True
+    
 def startAuto(ticker):
     isGoldenCross = False
     isDeadCross = False
@@ -289,7 +293,7 @@ def startAuto(ticker):
 
 
         cci_data = get_cci(cci_candle_data, 100)
-        cci = cci_data[-2]['CCI']
+        cci = float(cci_data[-2]['CCI'])
         print('cci: ', cci)
         
         currentPrice = float(cci_candle_data[-1][4])
@@ -338,16 +342,16 @@ def startAuto(ticker):
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isDeadCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
-                    # msg = ticker, 'Dead Cross  ', 'CCI:', cci, 'Price:', currentPrice
-                    # bot.sendMessage(chat_id="-796323955", text=msg)      
+                    msg = ticker, 'Dead Cross  ', 'CCI:', cci, 'Price:', currentPrice
+                    bot.sendMessage(chat_id="-796323955", text=msg)      
                     
                 if gold:
                     call='골든크로스'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isGoldenCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
-                    # msg = ticker, 'Golden Cross  ', 'CCI:', cci, 'Price:', currentPrice
-                    # bot.sendMessage(chat_id="-796323955", text=msg)
+                    msg = ticker, 'Golden Cross  ', 'CCI:', cci, 'Price:', currentPrice
+                    bot.sendMessage(chat_id="-796323955", text=msg)
             else:
                 # cci_data = get_cci(candle_data, 100)
                 # cci = cci_data[-2]['CCI']
@@ -355,12 +359,12 @@ def startAuto(ticker):
                 if isGoldenCross == True:
                     #매수 타이밍 잡기 (cci:-100 이하로 떨어지고 다시 -100을 뚫었을때)
                     if cciLow == False:
-                        if cci <= -95:
+                        if cci <= check_cci*-1:
                             cciLow = True
                             # msg = ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                             # bot.sendMessage(chat_id="-796323955", text=msg)
                     else:
-                        if cci >= -95:
+                        if cci >= check_cci*-1:
                             # 매수 시점
                             # 여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
                             # currentPrice = candle_data[0]['trade_price']
@@ -389,12 +393,12 @@ def startAuto(ticker):
                 if isDeadCross == True:
                     #매수 타이밍 잡기 (cci:+100 이상으로 올라가고 다시 +100으로 내려 갔을때)
                     if cciHight == False:
-                        if cci >= 95:
+                        if cci >= check_cci:
                             cciHight = True
                             # msg = ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                             # bot.sendMessage(chat_id="-796323955", text=msg)
                     else:
-                        if cci <= 95:
+                        if cci <= check_cci:
                             #매수 시점
                             # #여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
                             # currentPrice = candle_data[0]['trade_price']
