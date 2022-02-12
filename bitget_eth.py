@@ -24,7 +24,7 @@ api_key = "bg_f4ae7e0a6fab17130de0641afb1cda61"
 secret_key = "e9a1b99d7ef0cbe0a428afacbc0480ff73c9812e89481f0ec2199af6be9359a3"
 passphrase = "bitgetcci"
 
-ticker = 'SEThSUSDT_SUMCBL'
+ticker = 'SETHSUSDT_SUMCBL'
 leverage = 10
 check_cci = 20
 
