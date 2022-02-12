@@ -200,10 +200,10 @@ def getDealPrice(ticker, orderId):
 
 def getSize(ticker, myAvailable, currentPrice):
     if ticker == 'SBTCSUSDT_SUMCBL':
-        size = round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
+        size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 3))
         return size
     elif ticker == 'SETHSUSDT_SUMCBL':
-        size = round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+        size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 2))
         return size
     elif ticker == 'SEOSSUSDT_SUMCBL':
         size = int(round(((myAvailable * 0.1) * leverage) / currentPrice, 0))
@@ -212,21 +212,21 @@ def getSize(ticker, myAvailable, currentPrice):
 
 def getUpline(ticker, currentPrice, per):
     if ticker == 'SBTCSUSDT_SUMCBL':
-        return round(currentPrice + (currentPrice * per), 0)
+        return float(round(currentPrice + (currentPrice * per), 0))
     elif ticker == 'SETHSUSDT_SUMCBL':
-        return round(currentPrice + (currentPrice * per), 0)
+        return float(round(currentPrice + (currentPrice * per), 1))
     elif ticker == 'SEOSSUSDT_SUMCBL':
-        return round(currentPrice + (currentPrice * per), 3)
+        return float(round(currentPrice + (currentPrice * per), 3))
     return 0
 
     
 def getDownline(ticker, currentPrice, per):
     if ticker == 'SBTCSUSDT_SUMCBL':
-        return round(currentPrice - (currentPrice * 0.005), 0)
+        return float(round(currentPrice - (currentPrice * 0.005), 0))
     elif ticker == 'SETHSUSDT_SUMCBL':
-        return round(currentPrice - (currentPrice * 0.005), 0)
+        return float(round(currentPrice - (currentPrice * 0.005), 1))
     elif ticker == 'SEOSSUSDT_SUMCBL':
-        return round(currentPrice - (currentPrice * 0.005), 3)
+        return float(round(currentPrice - (currentPrice * 0.005), 3))
     return 0
 
     
@@ -292,7 +292,7 @@ def startAuto(ticker):
         cci = cci_data[-2]['CCI']
         print('cci: ', cci)
         
-        currentPrice = cci_candle_data[-1][4]
+        currentPrice = float(cci_candle_data[-1][4])
         print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice)
                
         if isBuy == False:
