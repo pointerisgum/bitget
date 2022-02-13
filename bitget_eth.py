@@ -26,7 +26,7 @@ passphrase = "bitgetcci"
 
 ticker = 'SETHSUSDT_SUMCBL'
 leverage = 10
-check_cci = 20
+check_cci = 95
 
 # symbol = 'BTCUSDT_UMCBL'
 
@@ -337,7 +337,7 @@ def startAuto(ticker):
                 # cci = cci_data[-1]['CCI']
 
                 if dead:
-                    call='데드크로스'
+                    call='dead cross'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isDeadCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
@@ -345,7 +345,7 @@ def startAuto(ticker):
                     bot.sendMessage(chat_id="-796323955", text=msg)      
                     
                 if gold:
-                    call='골든크로스'
+                    call='golden cross'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isGoldenCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]

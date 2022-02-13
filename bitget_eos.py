@@ -337,7 +337,7 @@ def startAuto(ticker):
                 # cci = cci_data[-1]['CCI']
 
                 if dead:
-                    call='데드크로스'
+                    call='dead cross'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isDeadCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
@@ -345,7 +345,7 @@ def startAuto(ticker):
                     bot.sendMessage(chat_id="-796323955", text=msg)      
                     
                 if gold:
-                    call='골든크로스'
+                    call='golden cross'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isGoldenCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
@@ -431,7 +431,7 @@ def startAuto(ticker):
                         
                 if currentPrice > maxPrice:
                     #고점 갱신
-                    maxPrice = currentPrice
+                    maxPrice = float(round(currentPrice, 3))
         
                 if currentPrice <= downLinePrice:
                     #손절
@@ -473,7 +473,7 @@ def startAuto(ticker):
 
                 #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
                 if maxPrice > upLinePrice:
-                    if currentPrice < maxPrice - (maxPrice * 0.002):
+                    if currentPrice < float(round(maxPrice - (maxPrice * 0.002), 3)):
                         print('currentPrice: ', currentPrice, 'maxPrice: ', maxPrice, 'type: ', type(maxPrice), 'max0.2: ', maxPrice + (maxPrice * 0.002))
 
                         #익절
