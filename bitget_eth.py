@@ -240,7 +240,7 @@ dead = False
 def candles15():
     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '15min candles call')
     
-    candle_data = get_candle('SBTCSUSDT_SUMCBL', 900, 100)
+    candle_data = get_candle(ticker, 900, 100)
 
     for i in range(0, len(candle_data)):
         candle_data[i][0] = float(candle_data[i][0])
