@@ -838,19 +838,25 @@ def oneDay():
         shortOrderId = shortOrderIds[i]
         buySize = buySizes[i]
 
+        slPer = 0.01
+        sl = 0
         price = float(marketPrice['data']['markPrice'])
         size = 0
         if price >= 10000:
             price = round(close + ((hight - low) * k), 0)
+            sl = round(price * slPer, 0)
             size = round(((myAvailable * 0.1) * leverage) / price, 3)
         elif price >= 1000:
             price = round(close + ((hight - low) * k), 1)
+            sl = round(price * slPer, 1)
             size = round(((myAvailable * 0.1) * leverage) / price, 2)
         elif price >= 100:
             price = round(close + ((hight - low) * k), 2)
+            sl = round(price * slPer, 2)
             size = round(((myAvailable * 0.1) * leverage) / price, 1)
         else:
             price = round(close + ((hight - low) * k), 3)
+            sl = round(price * slPer, 3)
             size = round(((myAvailable * 0.1) * leverage) / price, 0)
 
         #이전에 걸어둔 예약 매수가 있다면 취소
@@ -884,7 +890,8 @@ def oneDay():
             longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
                                         triggerPrice=price,
                                         executePrice=price,
-                                        triggerType='fill_price')
+                                        triggerType='fill_price',
+                                        presetStopLossPrice=price-sl)
             if longResult is not None:
                 longOrderIds[i] = int(getOrderId(longResult))
         else:
@@ -896,7 +903,9 @@ def oneDay():
             shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
                                     triggerPrice=price,
                                     executePrice=price,
-                                    triggerType='fill_price')
+                                    triggerType='fill_price',
+                                    presetStopLossPrice=price+sl)
+
             if shortResult is not None:
                 shortOrderIds[i] = int(getOrderId(shortResult))
 
