@@ -838,26 +838,38 @@ def oneDay():
         shortOrderId = shortOrderIds[i]
         buySize = buySizes[i]
 
+
         slPer = 0.01
-        sl = 0
-        price = float(marketPrice['data']['markPrice'])
+        currentPrice = float(marketPrice['data']['markPrice'])
         size = 0
-        if price >= 10000:
-            price = round(close + ((hight - low) * k), 0)
-            sl = round(price * slPer, 0)
-            size = round(((myAvailable * 0.1) * leverage) / price, 3)
-        elif price >= 1000:
-            price = round(close + ((hight - low) * k), 1)
-            sl = round(price * slPer, 1)
-            size = round(((myAvailable * 0.1) * leverage) / price, 2)
-        elif price >= 100:
-            price = round(close + ((hight - low) * k), 2)
-            sl = round(price * slPer, 2)
-            size = round(((myAvailable * 0.1) * leverage) / price, 1)
+        longPrice = 0
+        shortPrice = 0
+        longSL = 0
+        shortSL = 0
+        if currentPrice >= 10000:
+            longPrice = round(close + ((hight - low) * k), 0)
+            shortPrice = round(close + ((hight - low) * k), 0)
+            longSL = round(longPrice-(currentPrice * slPer), 0)
+            shortSL = round(shortPrice+(currentPrice * slPer), 0)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
+        elif currentPrice >= 1000:
+            longPrice = round(close + ((hight - low) * k), 1)
+            shortPrice = round(close + ((hight - low) * k), 1)
+            longSL = round(longPrice-(currentPrice * slPer), 1)
+            shortSL = round(shortPrice+(currentPrice * slPer), 1)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+        elif currentPrice >= 100:
+            longPrice = round(close + ((hight - low) * k), 2)
+            shortPrice = round(close + ((hight - low) * k), 2)
+            longSL = round(longPrice-(currentPrice * slPer), 2)
+            shortSL = round(shortPrice+(currentPrice * slPer), 2)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 1)
         else:
-            price = round(close + ((hight - low) * k), 3)
-            sl = round(price * slPer, 3)
-            size = round(((myAvailable * 0.1) * leverage) / price, 0)
+            longPrice = round(close + ((hight - low) * k), 3)
+            shortPrice = round(close + ((hight - low) * k), 3)
+            longSL = round(longPrice-(currentPrice * slPer), 3)
+            shortSL = round(shortPrice+(currentPrice * slPer), 3)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 0)
 
         #이전에 걸어둔 예약 매수가 있다면 취소
         if longOrderId > 0:
@@ -874,45 +886,50 @@ def oneDay():
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
-            msg = t, 'sell long', price
+            msg = t, 'sell long', currentPrice
             bot.sendMessage(chat_id=chatId, text=msg)
             
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
-            msg = t, 'sell short', price
+            msg = t, 'sell short', currentPrice
             bot.sendMessage(chat_id=chatId, text=msg)
         
         if open <= close:
             #롱 예약
-            msg = t, 'add long', price
+            msg = t, 'add long', currentPrice
             bot.sendMessage(chat_id=chatId, text=msg)
             longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
-                                        triggerPrice=price,
-                                        executePrice=price,
+                                        triggerPrice=longPrice,
+                                        executePrice=longPrice,
                                         triggerType='fill_price',
-                                        presetStopLossPrice=price-sl)
+                                        presetStopLossPrice=longSL)
             if longResult is not None:
                 longOrderIds[i] = int(getOrderId(longResult))
+            else:
+                print(t, '롱 예약안됨')
         else:
             #숏 예약
-            price = round(close - ((hight - low) * k), 3)
-            msg = t, 'add short', price
+            msg = t, 'add short', currentPrice
             bot.sendMessage(chat_id=chatId, text=msg)
 
             shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                                    triggerPrice=price,
-                                    executePrice=price,
+                                    triggerPrice=shortPrice,
+                                    executePrice=shortPrice,
                                     triggerType='fill_price',
-                                    presetStopLossPrice=price+sl)
+                                    presetStopLossPrice=shortSL)
 
             if shortResult is not None:
                 shortOrderIds[i] = int(getOrderId(shortResult))
+            else:
+                print(t, '숏 예약안됨')
 
         buySizes[i] = size
 
         time.sleep(1)
 
+oneDay()
+time.sleep(1)
 oneDay()
 schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":01").do(lambda: oneDay())
