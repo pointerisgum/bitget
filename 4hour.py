@@ -929,8 +929,6 @@ def oneDay():
         time.sleep(1)
 
 oneDay()
-time.sleep(1)
-oneDay()
 schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":16").do(lambda: oneDay())
