@@ -1,6 +1,7 @@
 import requests
 import json
 from . import consts as c, utils, exceptions
+from datetime import datetime
 
 
 class Client(object):
@@ -46,6 +47,9 @@ class Client(object):
         response = None
         if method == c.GET:
             response = requests.get(url, headers=header)
+            if response is None:
+                print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api return none!!!')
+                return None
             # print("response : ",response.text)
         elif method == c.POST:
             response = requests.post(url, data=body, headers=header)
@@ -57,7 +61,9 @@ class Client(object):
         # print("status:", response.status_code)
         # exception handle
         if not str(response.status_code).startswith('2'):
-            raise exceptions.BitgetAPIException(response)
+            # raise exceptions.BitgetAPIException(response)
+            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api error!!!')
+            return None
         try:
             res_header = response.headers
             if cursor:
