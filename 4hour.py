@@ -120,7 +120,18 @@ tickers = [BTC_Ticker, ETH_Ticker, EOS_Ticker]
 def get_candle(ticker, time, count):
     endTime = int(pydatetime.datetime.now().timestamp())
     try:
-        candles = marketApi.candles(ticker, granularity=time,startTime=(endTime * 1000) - ((time*1000)*count), endTime=endTime * 1000) #15분봉 200개
+        startTime = (endTime * 1000) - ((time*1000)*count)
+        # start2 = (endTime * 1000) - (((time*2)*1000)*count)
+        # start3 = (endTime * 1000) - (((time*3)*1000)*count)
+        # start4 = (endTime * 1000) - (((time*4)*1000)*count)
+        # start5 = (endTime * 1000) - (((time*5)*1000)*count)
+
+        candles = marketApi.candles(ticker, granularity=time,startTime=startTime, endTime=endTime * 1000) #15분봉 200개
+        # candles2 = marketApi.candles(ticker, granularity=time, startTime=start2, endTime=start) #15분봉 200개
+        # candles3 = marketApi.candles(ticker, granularity=time, startTime=start3, endTime=start2) #15분봉 200개
+        # candles4 = marketApi.candles(ticker, granularity=time, startTime=start4, endTime=start3) #15분봉 200개
+        # candles5 = marketApi.candles(ticker, granularity=time, startTime=start5, endTime=start4) #15분봉 200개
+        # candles = candles + candles2 + candles3# + candles4 + candles5
         if candles == None:
             print(ticker, time, (endTime * 1000) - ((time*1000)*count), endTime * 1000)
             return None
@@ -200,16 +211,17 @@ def getDealPrice(ticker, orderId):
         time.sleep(0.5)
 
 def getSize(ticker, myAvailable, currentPrice):
-    if ticker == BTC_Ticker:
-        size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 3))
-        return size
-    elif ticker == ETH_Ticker:
-        size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 2))
-        return size
-    elif ticker == EOS_Ticker:
-        size = int(round(((myAvailable * 0.1) * leverage) / currentPrice, 0))
-        return size
-    return 0
+    return round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
+    # if ticker == BTC_Ticker:
+    #     size = str(((myAvailable * 0.1) * leverage) / currentPrice)
+    #     return size
+    # elif ticker == ETH_Ticker:
+    #     size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 2))
+    #     return size
+    # elif ticker == EOS_Ticker:
+    #     size = int(round(((myAvailable * 0.1) * leverage) / currentPrice, 0))
+    #     return size
+    # return 0
 
 def getUpline(ticker, currentPrice, per):
     if ticker == BTC_Ticker:
@@ -324,332 +336,585 @@ shortOrderId = 0
 #                 shortOrderId = 0
 
 
-def startBTC():
-    t = BTC_Ticker
-    print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
 
-    open = 0
-    hight = 0
-    low = 0
-    close = 0
+total = 0.0
+
+def test(ticker):
+    # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
+    global total
+    k = 0.5
+    leverage = 1
+    fee = 0.1
+    candle_data = get_candle(ticker, 86400, 60)
+    longTotalPer = 0.0
+    shortTotalPer = 0.0
+    totalPer = 0.0
     
-    global buySize
-    global longOrderId
-    global shortOrderId
-
-    while True:
-        candle_data = get_candle(t, 14400, 2)
+    for i in range(len(candle_data)-1):
+        open = float(candle_data[i][1]) #시가
+        hight = float(candle_data[i][2]) #고가
+        low = float(candle_data[i][3]) #저가
+        close = float(candle_data[i][4]) #종가
         
-        if candle_data == None:
-            time.sleep(1)
-            continue
+        # longPrice = close + ((hight - low) * k)
+        # nextHight = float(candle_data[i+1][2]) #다음 봉의 고가
+        # if nextHight > longPrice:
+        #     #롱 매수
+        #     nextClose = float(candle_data[i+1][4]) #다음 봉의 종가
+        #     per = (round(((longPrice / nextClose) * 100) - 100, 2) * leverage) - (fee * leverage)
+        #     totalPer += per
+        #     longTotalPer += per
+
+        # shortPrice = close - ((hight - low) * k)
+        # nextLow = float(candle_data[i+1][3]) #다음 봉의 저가
+        # if nextLow < shortPrice:
+        #     #숏 매수
+        #     nextClose = float(candle_data[i+1][4]) #다음 봉의 종가
+        #     per = (round(((shortPrice / nextClose) * 100) - 100, 2) * leverage) * (fee * leverage)
+        #     totalPer += per
+        #     shortTotalPer += per
+
+        if open < close:
+            #롱
+            longPrice = close + ((hight - low) * k)
+            nextHight = float(candle_data[i+1][2]) #다음 봉의 고가
+            if nextHight > longPrice:
+                #롱 매수
+                nextClose = float(candle_data[i+1][4]) #다음 봉의 종가
+                per = (round(((longPrice / nextClose) * 100) - 100, 2) * leverage) - (fee * leverage)
+                totalPer += per
+                longTotalPer += per
+                # print(per)
+            # else:
+                # print('롱 매수하지 않음')
         
-        if len(candle_data) > 1:
-            print(t, candle_data[-2])
-            open = float(candle_data[-2][1]) #고가
-            hight = float(candle_data[-2][2]) #고가
-            low = float(candle_data[-2][3]) #저가
-            close = float(candle_data[-2][4]) #종가
+        if open > close:
+            #숏
+            shortPrice = close - ((hight - low) * k)
+            nextLow = float(candle_data[i+1][3]) #다음 봉의 저가
+            if nextLow < shortPrice:
+                #숏 매수
+                nextClose = float(candle_data[i+1][4]) #다음 봉의 종가
+                per = (round(((shortPrice / nextClose) * 100) - 100, 2) * leverage) * (fee * leverage)
+                totalPer += per
+                shortTotalPer += per
+                # print(per)
+            # else:
+                # print('숏 매수하지 않음')
+                
+    # print(ticker, 'longTotalPer : ', round(longTotalPer, 2))
+    # print(ticker, 'shortTotalPer : ', round(shortTotalPer, 2))
+    total += totalPer
+    print(ticker, round(totalPer, 2), '%')
+    print()
 
-            if hight > 0 and low > 0 and close > 0:
-                break
-            else:
-                time.sleep(1)
-        else:
-            time.sleep(1)
+# tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
+#            'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL', 'SOLUSDT_UMCBL', 'MATICUSDT_UMCBL',
+#            'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'AAVEUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL', 'ATOMUSDT_UMCBL',
+#            'XTZUSDT_UMCBL', 'SUSHIUSDT_UMCBL', 'AXSUSDT_UMCBL', 'THETAUSDT_UMCBL', 'AVAXUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'DASHUSDT_UMCBL',
+#            'SHIBUSDT_UMCBL', 'XEMUSDT_UMCBL', 'MANAUSDT_UMCBL', 'GALAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'DYDXUSDT_UMCBL', 'CRVUSDT_UMCBL',
+#            'NEARUSDT_UMCBL', 'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL', 'ARUSDT_UMCBL', 'RENUSDT_UMCBL', 'FTMUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
+#            'LRCUSDT_UMCBL', 'NEOUSDT_UMCBL', 'ALICEUSDT_UMCBL']
+
+# for i in range(len(tickers)):
+#     hour = '15:22:01' + '%02d' % (i+1)
+#     schedule.every().day.at(hour).do(lambda: oneDay())
+#     # schedule.every(3).seconds.do(lambda: oneDay(t))
+#     # time.sleep(0.05)
 
 
-    marketPrice = marketApi.market_price(t)
-    if marketPrice is None:
-        print('marketPrice is none')
-    
-    currentPrice = float(marketPrice['data']['markPrice'])
-    print(currentPrice)
-    currentPrice = getCurrentPrice(currentPrice)    
-    account = accountApi.accounts('sumcbl')
-    myAvailable = float(account['data'][0]['available'])
-    size = getSize(t, myAvailable, currentPrice)
-
-    #이전에 걸어둔 예약 매수가 있다면 취소
-    if longOrderId > 0:
-        planApi.cancel_plan(t, coin, longOrderId, 'normal_plan')
-    
-    if shortOrderId > 0:
-        planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
-
-
-    #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
-    result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell long', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
         
-    result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell short', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
+
+# for t in tickers:
+#     test(t)
+#     time.sleep(0.05)
+
+# print('total :', round(total, 2), '%')
+# print()
+
+# def startBTC():
+#     t = BTC_Ticker
+#     print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+
+#     open = 0
+#     hight = 0
+#     low = 0
+#     close = 0
     
-    if open <= close:
-        #롱 예약
-        price = math.ceil(close + ((hight - low) * k))
-        msg = t, 'add long', price
-        bot.sendMessage(chat_id=chatId, text=msg)
-        longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
-                                    triggerPrice=price,
-                                    executePrice=price,
-                                    triggerType='fill_price')
-        # longResult = orderApi.place_order(t, marginCoin=coin, size=buySize, side='open_long',
-        #                     orderType='limit', price=math.ceil(close + ((hight - low) * k)), timeInForceValue='normal')
-        longOrderId = int(getOrderId(longResult))
-    else:
-        #숏 예약
-        price = math.ceil(close - ((hight - low) * k))
-        msg = t, 'add short', price
-        bot.sendMessage(chat_id=chatId, text=msg)
+#     global buySize
+#     global longOrderId
+#     global shortOrderId
 
-        shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                                triggerPrice=price,
-                                executePrice=price,
-                                triggerType='fill_price')
-        # shortResult = orderApi.place_order(t, marginCoin=coin, size=buySize, side='open_short',
-        #                     orderType='limit', price=math.ceil(close - ((hight - low) * k)), timeInForceValue='normal')
-        shortOrderId = int(getOrderId(shortResult))
-
-    buySize = size
-
-ethBuySize = 0
-ethLongOrderId = 0
-ethShortOrderId = 0
-
-def startETH():
-    t = ETH_Ticker
-    print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
-
-    open = 0
-    hight = 0
-    low = 0
-    close = 0
-    
-    global ethBuySize
-    global ethLongOrderId
-    global ethShortOrderId
-
-    while True:
-        candle_data = get_candle(t, 14400, 2)
+#     while True:
+#         candle_data = get_candle(t, 14400, 2)
         
-        if candle_data == None:
-            time.sleep(1)
-            continue
+#         if candle_data == None:
+#             time.sleep(1)
+#             continue
         
-        if len(candle_data) > 1:
-            print(t, candle_data[-2])
-            open = float(candle_data[-2][1]) #고가
-            hight = float(candle_data[-2][2]) #고가
-            low = float(candle_data[-2][3]) #저가
-            close = float(candle_data[-2][4]) #종가
+#         if len(candle_data) > 1:
+#             print(t, candle_data[-2])
+#             open = float(candle_data[-2][1]) #고가
+#             hight = float(candle_data[-2][2]) #고가
+#             low = float(candle_data[-2][3]) #저가
+#             close = float(candle_data[-2][4]) #종가
 
-            if hight > 0 and low > 0 and close > 0:
-                break
-            else:
-                time.sleep(1)
-        else:
-            time.sleep(1)
+#             if hight > 0 and low > 0 and close > 0:
+#                 break
+#             else:
+#                 time.sleep(1)
+#         else:
+#             time.sleep(1)
 
 
-    marketPrice = marketApi.market_price(t)
-    if marketPrice is None:
-        print('marketPrice is none')
+#     marketPrice = marketApi.market_price(t)
+#     if marketPrice is None:
+#         print('marketPrice is none')
     
-    currentPrice = float(marketPrice['data']['markPrice'])
-    print(currentPrice)
-    currentPrice = getCurrentPrice(currentPrice)    
-    account = accountApi.accounts('sumcbl')
-    myAvailable = float(account['data'][0]['available'])
-    size = getSize(t, myAvailable, currentPrice)
+#     currentPrice = float(marketPrice['data']['markPrice'])
+#     print(currentPrice)
+#     currentPrice = getCurrentPrice(currentPrice)    
+#     account = accountApi.accounts('sumcbl')
+#     myAvailable = float(account['data'][0]['available'])
+#     size = getSize(t, myAvailable, currentPrice)
 
-    #이전에 걸어둔 예약 매수가 있다면 취소
-    if ethLongOrderId > 0:
-        planApi.cancel_plan(t, coin, ethLongOrderId, 'normal_plan')
+#     #이전에 걸어둔 예약 매수가 있다면 취소
+#     if longOrderId > 0:
+#         planApi.cancel_plan(t, coin, longOrderId, 'normal_plan')
     
-    if ethShortOrderId > 0:
-        planApi.cancel_plan(t, coin, ethShortOrderId, 'normal_plan')
+#     if shortOrderId > 0:
+#         planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
 
 
-    #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
-    result = orderApi.place_order(t, marginCoin=coin, size=ethBuySize, side='close_long', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell long', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
+#     #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
+#     print('매도 API 호출 전')
+#     result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
+#     print('매도 API 호출 후')
+#     print(result)
+#     if result is not None:
+#         msg = t, 'sell long', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
         
-    result = orderApi.place_order(t, marginCoin=coin, size=ethBuySize, side='close_short', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell short', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
+#     result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
+#     if result is not None:
+#         msg = t, 'sell short', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
     
-    if open <= close:
-        #롱 예약
-        price = math.ceil(close + ((hight - low) * k))
-        msg = t, 'add long', price
-        bot.sendMessage(chat_id=chatId, text=msg)
-        longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
-                                    triggerPrice=price,
-                                    executePrice=price,
-                                    triggerType='fill_price')
-        ethLongOrderId = int(getOrderId(longResult))
-    else:
-        #숏 예약
-        price = math.ceil(close - ((hight - low) * k))
-        msg = t, 'add short', price
-        bot.sendMessage(chat_id=chatId, text=msg)
+#     if open <= close:
+#         #롱 예약
+#         price = math.ceil(close + ((hight - low) * k))
+#         msg = t, 'add long', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
+#         longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+#                                     triggerPrice=price,
+#                                     executePrice=price,
+#                                     triggerType='fill_price')
+#         # longResult = orderApi.place_order(t, marginCoin=coin, size=buySize, side='open_long',
+#         #                     orderType='limit', price=math.ceil(close + ((hight - low) * k)), timeInForceValue='normal')
+#         longOrderId = int(getOrderId(longResult))
+#     else:
+#         #숏 예약
+#         price = math.ceil(close - ((hight - low) * k))
+#         msg = t, 'add short', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
 
-        shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                                triggerPrice=price,
-                                executePrice=price,
-                                triggerType='fill_price')
-        ethShortOrderId = int(getOrderId(shortResult))
+#         shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
+#                                 triggerPrice=price,
+#                                 executePrice=price,
+#                                 triggerType='fill_price')
+#         # shortResult = orderApi.place_order(t, marginCoin=coin, size=buySize, side='open_short',
+#         #                     orderType='limit', price=math.ceil(close - ((hight - low) * k)), timeInForceValue='normal')
+#         shortOrderId = int(getOrderId(shortResult))
 
-    ethBuySize = size
+#     buySize = size
+
+# ethBuySize = 0
+# ethLongOrderId = 0
+# ethShortOrderId = 0
+
+# def startETH():
+#     t = ETH_Ticker
+#     print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+
+#     open = 0
+#     hight = 0
+#     low = 0
+#     close = 0
+    
+#     global ethBuySize
+#     global ethLongOrderId
+#     global ethShortOrderId
+
+#     while True:
+#         candle_data = get_candle(t, 14400, 2)
+        
+#         if candle_data == None:
+#             time.sleep(1)
+#             continue
+        
+#         if len(candle_data) > 1:
+#             print(t, candle_data[-2])
+#             open = float(candle_data[-2][1]) #고가
+#             hight = float(candle_data[-2][2]) #고가
+#             low = float(candle_data[-2][3]) #저가
+#             close = float(candle_data[-2][4]) #종가
+
+#             if hight > 0 and low > 0 and close > 0:
+#                 break
+#             else:
+#                 time.sleep(1)
+#         else:
+#             time.sleep(1)
+
+
+#     marketPrice = marketApi.market_price(t)
+#     if marketPrice is None:
+#         print('marketPrice is none')
+    
+#     currentPrice = float(marketPrice['data']['markPrice'])
+#     print(currentPrice)
+#     currentPrice = getCurrentPrice(currentPrice)    
+#     account = accountApi.accounts('sumcbl')
+#     myAvailable = float(account['data'][0]['available'])
+#     size = getSize(t, myAvailable, currentPrice)
+
+#     #이전에 걸어둔 예약 매수가 있다면 취소
+#     if ethLongOrderId > 0:
+#         planApi.cancel_plan(t, coin, ethLongOrderId, 'normal_plan')
+    
+#     if ethShortOrderId > 0:
+#         planApi.cancel_plan(t, coin, ethShortOrderId, 'normal_plan')
+
+
+#     #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
+#     result = orderApi.place_order(t, marginCoin=coin, size=ethBuySize, side='close_long', orderType='market', timeInForceValue='normal')
+#     if result is not None:
+#         msg = t, 'sell long', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
+        
+#     result = orderApi.place_order(t, marginCoin=coin, size=ethBuySize, side='close_short', orderType='market', timeInForceValue='normal')
+#     if result is not None:
+#         msg = t, 'sell short', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
+    
+#     if open <= close:
+#         #롱 예약
+#         price = math.ceil(close + ((hight - low) * k))
+#         msg = t, 'add long', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
+#         longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+#                                     triggerPrice=price,
+#                                     executePrice=price,
+#                                     triggerType='fill_price')
+#         ethLongOrderId = int(getOrderId(longResult))
+#     else:
+#         #숏 예약
+#         price = math.ceil(close - ((hight - low) * k))
+#         msg = t, 'add short', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
+
+#         shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
+#                                 triggerPrice=price,
+#                                 executePrice=price,
+#                                 triggerType='fill_price')
+#         ethShortOrderId = int(getOrderId(shortResult))
+
+#     ethBuySize = size
 
 
 
-eosBuySize = 0
-eosLongOrderId = 0
-eosShortOrderId = 0
+# eosBuySize = 0
+# eosLongOrderId = 0
+# eosShortOrderId = 0
    
-def startEOS():
-    t = EOS_Ticker
-    print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+# def startEOS():
+#     t = EOS_Ticker
+#     print('startBTC', datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
 
-    open = 0
-    hight = 0
-    low = 0
-    close = 0
+#     open = 0
+#     hight = 0
+#     low = 0
+#     close = 0
     
-    global eosBuySize
-    global eosLongOrderId
-    global eosShortOrderId
+#     global eosBuySize
+#     global eosLongOrderId
+#     global eosShortOrderId
 
-    while True:
-        candle_data = get_candle(t, 14400, 2)
+#     while True:
+#         candle_data = get_candle(t, 14400, 2)
         
-        if candle_data == None:
-            time.sleep(1)
-            continue
+#         if candle_data == None:
+#             time.sleep(1)
+#             continue
         
-        if len(candle_data) > 1:
-            print(t, candle_data[-2])
-            open = float(candle_data[-2][1]) #고가
-            hight = float(candle_data[-2][2]) #고가
-            low = float(candle_data[-2][3]) #저가
-            close = float(candle_data[-2][4]) #종가
+#         if len(candle_data) > 1:
+#             print(t, candle_data[-2])
+#             open = float(candle_data[-2][1]) #고가
+#             hight = float(candle_data[-2][2]) #고가
+#             low = float(candle_data[-2][3]) #저가
+#             close = float(candle_data[-2][4]) #종가
 
-            if hight > 0 and low > 0 and close > 0:
-                break
+#             if hight > 0 and low > 0 and close > 0:
+#                 break
+#             else:
+#                 time.sleep(1)
+#         else:
+#             time.sleep(1)
+
+
+#     marketPrice = marketApi.market_price(t)
+#     if marketPrice is None:
+#         print('marketPrice is none')
+    
+#     currentPrice = float(marketPrice['data']['markPrice'])
+#     print(currentPrice)
+#     currentPrice = getCurrentPrice(currentPrice)    
+#     account = accountApi.accounts('sumcbl')
+#     myAvailable = float(account['data'][0]['available'])
+#     size = getSize(t, myAvailable, currentPrice)
+
+#     #이전에 걸어둔 예약 매수가 있다면 취소
+#     if eosLongOrderId > 0:
+#         planApi.cancel_plan(t, coin, eosLongOrderId, 'normal_plan')
+    
+#     if eosShortOrderId > 0:
+#         planApi.cancel_plan(t, coin, eosShortOrderId, 'normal_plan')
+
+
+#     #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
+#     result = orderApi.place_order(t, marginCoin=coin, size=eosBuySize, side='close_long', orderType='market', timeInForceValue='normal')
+#     if result is not None:
+#         msg = t, 'sell long', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
+        
+#     result = orderApi.place_order(t, marginCoin=coin, size=eosBuySize, side='close_short', orderType='market', timeInForceValue='normal')
+#     if result is not None:
+#         msg = t, 'sell short', currentPrice
+#         bot.sendMessage(chat_id=chatId, text=msg)
+    
+#     if open <= close:
+#         #롱 예약
+#         price = round(close + ((hight - low) * k), 3)
+#         msg = t, 'add long', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
+#         longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+#                                     triggerPrice=price,
+#                                     executePrice=price,
+#                                     triggerType='fill_price')
+#         eosLongOrderId = int(getOrderId(longResult))
+#     else:
+#         #숏 예약
+#         price = round(close - ((hight - low) * k), 3)
+#         msg = t, 'add short', price
+#         bot.sendMessage(chat_id=chatId, text=msg)
+
+#         shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
+#                                 triggerPrice=price,
+#                                 executePrice=price,
+#                                 triggerType='fill_price')
+#         eosShortOrderId = int(getOrderId(shortResult))
+
+#     eosBuySize = size
+    
+
+# msg = 'start 4hour larry'
+# bot.sendMessage(chat_id=chatId, text=msg)
+
+# # candles15()
+# # schedule.every().minute.at(":03").do(candles15) # 매분 23초에 job 실행
+# # schedule.every(3).seconds.do(lambda: test1()) # 3초마다 job 실행
+# # schedule.every().hour.at(":54").do(lambda: candles15()) # 매시간 42분에 작업 실행
+
+# # startAuto()
+# # # schedule.every(1).seconds.do(lambda: buyCheck())
+# # # schedule.every().hour.do(lambda: startAuto())
+# # schedule.every().hour.at(":01").do(lambda: startAuto()) # 매시간 42분에 작업 실행
+
+
+# startBTC()
+# time.sleep(1)
+# startETH()
+# time.sleep(1)
+# startEOS()
+
+# schedule.every().day.at("01:00:05").do(startBTC)
+# schedule.every().day.at("05:00:05").do(startBTC)
+# schedule.every().day.at("09:00:05").do(startBTC)
+# schedule.every().day.at("13:00:05").do(startBTC)
+# schedule.every().day.at("17:00:05").do(startBTC)
+# schedule.every().day.at("21:00:05").do(startBTC)
+
+# schedule.every().day.at("01:00:10").do(startETH)
+# schedule.every().day.at("05:00:10").do(startETH)
+# schedule.every().day.at("09:00:10").do(startETH)
+# schedule.every().day.at("13:00:10").do(startETH)
+# schedule.every().day.at("17:00:10").do(startETH)
+# schedule.every().day.at("21:00:10").do(startETH)
+
+# schedule.every().day.at("01:00:15").do(startEOS)
+# schedule.every().day.at("05:00:15").do(startEOS)
+# schedule.every().day.at("09:00:15").do(startEOS)
+# schedule.every().day.at("13:00:15").do(startEOS)
+# schedule.every().day.at("17:00:15").do(startEOS)
+# schedule.every().day.at("21:00:15").do(startEOS)
+
+# # schedule.every().hour.at(":41").do(lambda: startAuto())
+# # schedule.every().hour.at(":42").do(lambda: startAuto())
+# # schedule.every().hour.at(":43").do(lambda: startAuto())
+# # schedule.every().hour.at(":44").do(lambda: startAuto())
+
+if coin == 'SUSDT':
+    tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
+else:
+    tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
+           'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL',
+           'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL',
+           'AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL',
+           'XEMUSDT_UMCBL', 'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL',
+           'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL', 'ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
+           'LRCUSDT_UMCBL']
+
+buySizes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
+            0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+longOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+               0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+def oneDay():
+    global buySizes
+    global longOrderIds
+    global shortOrderIds
+
+    for i in range(len(tickers)):
+        t = tickers[i]
+        print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+
+        open = 0
+        hight = 0
+        low = 0
+        close = 0
+        
+        while True:
+            # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
+            candle_data = get_candle(t, 3600, 2)
+            
+            if candle_data == None:
+                time.sleep(1)
+                continue
+            
+            if len(candle_data) > 1:
+                # print(t, candle_data[-2])
+                open = float(candle_data[-2][1]) #고가
+                hight = float(candle_data[-2][2]) #고가
+                low = float(candle_data[-2][3]) #저가
+                close = float(candle_data[-2][4]) #종가
+
+                if hight > 0 and low > 0 and close > 0:
+                    break
+                else:
+                    time.sleep(1)
             else:
                 time.sleep(1)
-        else:
-            time.sleep(1)
 
 
-    marketPrice = marketApi.market_price(t)
-    if marketPrice is None:
-        print('marketPrice is none')
-    
-    currentPrice = float(marketPrice['data']['markPrice'])
-    print(currentPrice)
-    currentPrice = getCurrentPrice(currentPrice)    
-    account = accountApi.accounts('sumcbl')
-    myAvailable = float(account['data'][0]['available'])
-    size = getSize(t, myAvailable, currentPrice)
-
-    #이전에 걸어둔 예약 매수가 있다면 취소
-    if eosLongOrderId > 0:
-        planApi.cancel_plan(t, coin, eosLongOrderId, 'normal_plan')
-    
-    if eosShortOrderId > 0:
-        planApi.cancel_plan(t, coin, eosShortOrderId, 'normal_plan')
-
-
-    #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
-    result = orderApi.place_order(t, marginCoin=coin, size=eosBuySize, side='close_long', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell long', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
+        marketPrice = marketApi.market_price(t)
+        if marketPrice is None:
+            print('marketPrice is none')
         
-    result = orderApi.place_order(t, marginCoin=coin, size=eosBuySize, side='close_short', orderType='market', timeInForceValue='normal')
-    if result is not None:
-        msg = t, 'sell short', currentPrice
-        bot.sendMessage(chat_id=chatId, text=msg)
-    
-    if open <= close:
-        #롱 예약
-        price = round(close + ((hight - low) * k), 3)
-        msg = t, 'add long', price
-        bot.sendMessage(chat_id=chatId, text=msg)
-        longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+        # print(currentPrice)
+        # currentPrice = getCurrentPrice(currentPrice)
+        if coin == 'SUSDT':
+            account = accountApi.accounts('sumcbl')
+        else:
+            account = accountApi.accounts('umcbl')
+        
+        myAvailable = float(account['data'][0]['available'])
+        # size = getSize(t, myAvailable, currentPrice)
+
+        longOrderId = longOrderIds[i]
+        shortOrderId = shortOrderIds[i]
+        buySize = buySizes[i]
+
+        price = float(marketPrice['data']['markPrice'])
+        size = 0
+        if price >= 10000:
+            price = round(close + ((hight - low) * k), 0)
+            size = round(((myAvailable * 0.1) * leverage) / price, 3)
+        elif price >= 1000:
+            price = round(close + ((hight - low) * k), 1)
+            size = round(((myAvailable * 0.1) * leverage) / price, 2)
+        elif price >= 100:
+            price = round(close + ((hight - low) * k), 2)
+            size = round(((myAvailable * 0.1) * leverage) / price, 1)
+        else:
+            price = round(close + ((hight - low) * k), 3)
+            size = round(((myAvailable * 0.1) * leverage) / price, 0)
+
+        #이전에 걸어둔 예약 매수가 있다면 취소
+        if longOrderId > 0:
+            planApi.cancel_plan(t, coin, longOrderId, 'normal_plan')
+            longOrderIds[i] = 0
+        
+        if shortOrderId > 0:
+            planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
+            shortOrderIds[i] = 0
+
+
+        #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
+        # if buySize > 0:
+        result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
+        if result is not None:
+            buySizes[i] = 0
+            msg = t, 'sell long', price
+            bot.sendMessage(chat_id=chatId, text=msg)
+            
+        result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
+        if result is not None:
+            buySizes[i] = 0
+            msg = t, 'sell short', price
+            bot.sendMessage(chat_id=chatId, text=msg)
+        
+        if open <= close:
+            #롱 예약
+            msg = t, 'add long', price
+            bot.sendMessage(chat_id=chatId, text=msg)
+            longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+                                        triggerPrice=price,
+                                        executePrice=price,
+                                        triggerType='fill_price')
+            if longResult is not None:
+                longOrderIds[i] = int(getOrderId(longResult))
+        else:
+            #숏 예약
+            price = round(close - ((hight - low) * k), 3)
+            msg = t, 'add short', price
+            bot.sendMessage(chat_id=chatId, text=msg)
+
+            shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
                                     triggerPrice=price,
                                     executePrice=price,
                                     triggerType='fill_price')
-        eosLongOrderId = int(getOrderId(longResult))
-    else:
-        #숏 예약
-        price = round(close - ((hight - low) * k), 3)
-        msg = t, 'add short', price
-        bot.sendMessage(chat_id=chatId, text=msg)
+            if shortResult is not None:
+                shortOrderIds[i] = int(getOrderId(shortResult))
 
-        shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                                triggerPrice=price,
-                                executePrice=price,
-                                triggerType='fill_price')
-        eosShortOrderId = int(getOrderId(shortResult))
+        buySizes[i] = size
 
-    eosBuySize = size
-    
+        time.sleep(1)
 
-msg = 'start 4hour larry'
-bot.sendMessage(chat_id=chatId, text=msg)
+oneDay()
+schedule.every().hour.at(":01").do(lambda: oneDay())
+# schedule.every().hour.at(":01").do(lambda: oneDay())
+# schedule.every().hour.at(":16").do(lambda: oneDay())
+# schedule.every().hour.at(":31").do(lambda: oneDay())
+# schedule.every().hour.at(":46").do(lambda: oneDay())
+# oneDay()
+# time.sleep(30)
+# oneDay()
 
-# candles15()
-# schedule.every().minute.at(":03").do(candles15) # 매분 23초에 job 실행
-# schedule.every(3).seconds.do(lambda: test1()) # 3초마다 job 실행
-# schedule.every().hour.at(":54").do(lambda: candles15()) # 매시간 42분에 작업 실행
-
-# startAuto()
-# # schedule.every(1).seconds.do(lambda: buyCheck())
-# # schedule.every().hour.do(lambda: startAuto())
-# schedule.every().hour.at(":01").do(lambda: startAuto()) # 매시간 42분에 작업 실행
-
-startBTC()
-time.sleep(1)
-startETH()
-time.sleep(1)
-startEOS()
-
-schedule.every().day.at("01:00:05").do(startBTC)
-schedule.every().day.at("05:00:05").do(startBTC)
-schedule.every().day.at("09:00:05").do(startBTC)
-schedule.every().day.at("13:00:05").do(startBTC)
-schedule.every().day.at("17:00:05").do(startBTC)
-schedule.every().day.at("21:00:05").do(startBTC)
-
-schedule.every().day.at("01:00:10").do(startETH)
-schedule.every().day.at("05:00:10").do(startETH)
-schedule.every().day.at("09:00:10").do(startETH)
-schedule.every().day.at("13:00:10").do(startETH)
-schedule.every().day.at("17:00:10").do(startETH)
-schedule.every().day.at("21:00:10").do(startETH)
-
-schedule.every().day.at("01:00:15").do(startEOS)
-schedule.every().day.at("05:00:15").do(startEOS)
-schedule.every().day.at("09:00:15").do(startEOS)
-schedule.every().day.at("13:00:15").do(startEOS)
-schedule.every().day.at("17:00:15").do(startEOS)
-schedule.every().day.at("21:00:15").do(startEOS)
-
-# schedule.every().hour.at(":41").do(lambda: startAuto())
-# schedule.every().hour.at(":42").do(lambda: startAuto())
-# schedule.every().hour.at(":43").do(lambda: startAuto())
-# schedule.every().hour.at(":44").do(lambda: startAuto())
+# schedule.every().day.at('15:53:01').do(lambda: oneDay())
 
 while True:
     schedule.run_pending()

@@ -119,8 +119,8 @@ class Request:
         con_pool_size: int = 1,
         proxy_url: str = None,
         urllib3_proxy_kwargs: JSONDict = None,
-        connect_timeout: float = 5.0,
-        read_timeout: float = 5.0,
+        connect_timeout: float = 7.0,
+        read_timeout: float = 6.0,
     ):
         if urllib3_proxy_kwargs is None:
             urllib3_proxy_kwargs = {}
@@ -227,7 +227,9 @@ class Request:
                     raise ChatMigrated(migrate_to_chat_id)
                 retry_after = parameters.get('retry_after')
                 if retry_after:
-                    raise RetryAfter(retry_after)
+                    # raise RetryAfter(retry_after)
+                    #텔레그램 메세지 보낼때 가끔씩 리트라이가 계속 발생하다가 죽는데 원인을 모르겠음 우선 주석처리 함
+                    print('telegram message retry kill')
             if description:
                 return description
 
@@ -258,7 +260,9 @@ class Request:
         try:
             resp = self._con_pool.request(*args, **kwargs)
         except urllib3.exceptions.TimeoutError as error:
-            raise TimedOut() from error
+            # raise TimedOut() from error
+            #여기서 가끔 죽어서 우선 주석처리 함
+            print('timeOut')
         except urllib3.exceptions.HTTPError as error:
             # HTTPError must come last as its the base urllib3 exception class
             # TODO: do something smart here; for now just raise NetworkError
@@ -287,7 +291,8 @@ class Request:
                 'https://core.telegram.org/bots/api#senddocument'
             )
         if resp.status == 502:
-            raise NetworkError('Bad Gateway')
+            # raise NetworkError('Bad Gateway')
+            print('raise NetworkError(Bad Gateway)')
         raise NetworkError(f'{message} ({resp.status})')
 
     def post(self, url: str, data: JSONDict, timeout: float = None) -> Union[JSONDict, bool]:
