@@ -62,7 +62,7 @@ class Client(object):
         # exception handle
         if not str(response.status_code).startswith('2'):
             # raise exceptions.BitgetAPIException(response)
-            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api error!!!')
+            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api error!!!')  #여기
             return None
         try:
             res_header = response.headers
