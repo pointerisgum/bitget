@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'SUSDT'
-leverage = 10
+leverage = 20
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -886,19 +886,19 @@ def oneDay():
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
-            msg = t, 'sell long', currentPrice
-            bot.sendMessage(chat_id=chatId, text=msg)
+            # msg = t, 'sell long', currentPrice
+            # bot.sendMessage(chat_id=chatId, text=msg)
             
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
-            msg = t, 'sell short', currentPrice
-            bot.sendMessage(chat_id=chatId, text=msg)
+            # msg = t, 'sell short', currentPrice
+            # bot.sendMessage(chat_id=chatId, text=msg)
         
         if open <= close:
             #롱 예약
-            msg = t, 'add long', currentPrice
-            bot.sendMessage(chat_id=chatId, text=msg)
+            # msg = t, 'add long', currentPrice
+            # bot.sendMessage(chat_id=chatId, text=msg)
             longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
                                         triggerPrice=longPrice,
                                         executePrice=longPrice,
@@ -907,11 +907,12 @@ def oneDay():
             if longResult is not None:
                 longOrderIds[i] = int(getOrderId(longResult))
             else:
-                print(t, '롱 예약안됨')
+                print(t, 'longResult none')
+                continue
         else:
             #숏 예약
-            msg = t, 'add short', currentPrice
-            bot.sendMessage(chat_id=chatId, text=msg)
+            # msg = t, 'add short', currentPrice
+            # bot.sendMessage(chat_id=chatId, text=msg)
 
             shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
                                     triggerPrice=shortPrice,
@@ -922,14 +923,17 @@ def oneDay():
             if shortResult is not None:
                 shortOrderIds[i] = int(getOrderId(shortResult))
             else:
-                print(t, '숏 예약안됨')
+                print(t, 'shortResult none')
+                continue
 
         buySizes[i] = size
 
-        time.sleep(1)
+        time.sleep(3)
 
 oneDay()
-schedule.every().hour.at(":01").do(lambda: oneDay())
+schedule.every().day.at("01:00:05").do(oneDay())
+
+# schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":16").do(lambda: oneDay())
 # schedule.every().hour.at(":31").do(lambda: oneDay())
@@ -942,4 +946,4 @@ schedule.every().hour.at(":01").do(lambda: oneDay())
 
 while True:
     schedule.run_pending()
-    time.sleep(1)
+    # time.sleep(1)
