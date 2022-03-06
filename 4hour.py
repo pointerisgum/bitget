@@ -799,7 +799,7 @@ def oneDay():
         
         while True:
             # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
-            candle_data = get_candle(t, 3600, 2)
+            candle_data = get_candle(t, 86400, 2)
             
             if candle_data == None:
                 time.sleep(1)
