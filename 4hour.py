@@ -36,8 +36,7 @@ ETH_Ticker = 'SETHSUSDT_SUMCBL'
 EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
-coin = 'SUSDT'
-leverage = 20
+coin = 'USDT'
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -343,9 +342,9 @@ def test(ticker):
     # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
     global total
     k = 0.5
-    leverage = 1
+    leverage = 10
     fee = 0.1
-    candle_data = get_candle(ticker, 86400, 60)
+    candle_data = get_candle(ticker, 86400, 5)
     longTotalPer = 0.0
     shortTotalPer = 0.0
     totalPer = 0.0
@@ -408,6 +407,7 @@ def test(ticker):
     print(ticker, round(totalPer, 2), '%')
     print()
 
+
 # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
 #            'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL', 'SOLUSDT_UMCBL', 'MATICUSDT_UMCBL',
 #            'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'AAVEUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL', 'ATOMUSDT_UMCBL',
@@ -425,12 +425,6 @@ def test(ticker):
 
         
 
-# for t in tickers:
-#     test(t)
-#     time.sleep(0.05)
-
-# print('total :', round(total, 2), '%')
-# print()
 
 # def startBTC():
 #     t = BTC_Ticker
@@ -765,14 +759,24 @@ def test(ticker):
 
 if coin == 'SUSDT':
     tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
+    # tickers = ['SBTCSUSDT_SUMCBL']
 else:
+    # tickers = ['ETCUSDT_UMCBL']
+    #'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL',
     tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
            'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL',
            'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL',
            'AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL',
            'XEMUSDT_UMCBL', 'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL',
-           'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL', 'ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
+           'ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
            'LRCUSDT_UMCBL']
+
+# for t in tickers:
+#     test(t)
+#     time.sleep(0.05)
+
+# print('total :', round(total, 2), '%')
+# print()
 
 buySizes = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
             0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
@@ -781,7 +785,13 @@ longOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+leverage = 10
 
+# longResult = planApi.place_plan('SBTCSUSDT_SUMCBL', marginCoin=coin, size=0.01, side='open_long', orderType='market',
+#                             triggerPrice=37905,
+#                             executePrice=37905,
+#                             triggerType='fill_price',
+#                             presetStopLossPrice=36000)
 
 def oneDay():
     global buySizes
@@ -807,10 +817,10 @@ def oneDay():
             
             if len(candle_data) > 1:
                 # print(t, candle_data[-2])
-                open = float(candle_data[-2][1]) #고가
-                hight = float(candle_data[-2][2]) #고가
-                low = float(candle_data[-2][3]) #저가
-                close = float(candle_data[-2][4]) #종가
+                open = float(candle_data[-2][1]) #전날 고가
+                hight = float(candle_data[-2][2]) #전날 고가
+                low = float(candle_data[-2][3]) #전날 저가
+                close = float(candle_data[-2][4]) #전날 종가
 
                 if hight > 0 and low > 0 and close > 0:
                     break
@@ -848,25 +858,31 @@ def oneDay():
         shortSL = 0
         if currentPrice >= 10000:
             longPrice = round(close + ((hight - low) * k), 0)
-            shortPrice = round(close + ((hight - low) * k), 0)
+            shortPrice = round(close - ((hight - low) * k), 0)
             longSL = round(longPrice-(currentPrice * slPer), 0)
             shortSL = round(shortPrice+(currentPrice * slPer), 0)
             size = round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
         elif currentPrice >= 1000:
             longPrice = round(close + ((hight - low) * k), 1)
-            shortPrice = round(close + ((hight - low) * k), 1)
+            shortPrice = round(close - ((hight - low) * k), 1)
             longSL = round(longPrice-(currentPrice * slPer), 1)
             shortSL = round(shortPrice+(currentPrice * slPer), 1)
             size = round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
         elif currentPrice >= 100:
+            longPrice = round(close + ((hight - low) * k), 1)
+            shortPrice = round(close - ((hight - low) * k), 1)
+            longSL = round(longPrice-(currentPrice * slPer), 1)
+            shortSL = round(shortPrice+(currentPrice * slPer), 1)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 1)
+        elif currentPrice >= 10:
             longPrice = round(close + ((hight - low) * k), 2)
-            shortPrice = round(close + ((hight - low) * k), 2)
+            shortPrice = round(close - ((hight - low) * k), 2)
             longSL = round(longPrice-(currentPrice * slPer), 2)
             shortSL = round(shortPrice+(currentPrice * slPer), 2)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 1)
+            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 0)
         else:
             longPrice = round(close + ((hight - low) * k), 3)
-            shortPrice = round(close + ((hight - low) * k), 3)
+            shortPrice = round(close - ((hight - low) * k), 3)
             longSL = round(longPrice-(currentPrice * slPer), 3)
             shortSL = round(shortPrice+(currentPrice * slPer), 3)
             size = round(((myAvailable * 0.1) * leverage) / currentPrice, 0)
@@ -879,7 +895,6 @@ def oneDay():
         if shortOrderId > 0:
             planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
             shortOrderIds[i] = 0
-
 
         #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
         # if buySize > 0:
@@ -895,40 +910,42 @@ def oneDay():
             # msg = t, 'sell short', currentPrice
             # bot.sendMessage(chat_id=chatId, text=msg)
         
-        if open <= close:
+        # if open <= close:
             #롱 예약
             # msg = t, 'add long', currentPrice
             # bot.sendMessage(chat_id=chatId, text=msg)
-            longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
-                                        triggerPrice=longPrice,
-                                        executePrice=longPrice,
-                                        triggerType='fill_price',
-                                        presetStopLossPrice=longSL)
-            if longResult is not None:
-                longOrderIds[i] = int(getOrderId(longResult))
-            else:
-                print(t, 'longResult none')
-                continue
+        longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='market',
+                                    triggerPrice=longPrice,
+                                    executePrice=longPrice,
+                                    triggerType='fill_price',
+                                    presetStopLossPrice=longSL)
+        if longResult is not None:
+            longOrderIds[i] = int(getOrderId(longResult))
         else:
+            print(t, 'longResult none')
+            # continue
+        # else:
             #숏 예약
             # msg = t, 'add short', currentPrice
             # bot.sendMessage(chat_id=chatId, text=msg)
+        shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='market',
+                                triggerPrice=shortPrice,
+                                executePrice=shortPrice,
+                                triggerType='fill_price',
+                                presetStopLossPrice=shortSL)
 
-            shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                                    triggerPrice=shortPrice,
-                                    executePrice=shortPrice,
-                                    triggerType='fill_price',
-                                    presetStopLossPrice=shortSL)
-
-            if shortResult is not None:
-                shortOrderIds[i] = int(getOrderId(shortResult))
-            else:
-                print(t, 'shortResult none')
-                continue
+        if shortResult is not None:
+            shortOrderIds[i] = int(getOrderId(shortResult))
+        else:
+            print(t, 'shortResult none')
+                # continue
 
         buySizes[i] = size
 
-        time.sleep(3)
+        time.sleep(1)
+
+# oneDay()
+# schedule.every(1).minute.do(lambda: oneDay())
 
 oneDay()
 schedule.every().day.at("01:00:05").do(lambda: oneDay())
