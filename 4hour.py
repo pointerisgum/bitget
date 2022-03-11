@@ -27,9 +27,9 @@ slackToken = "xoxb-2958422443234-2961015128436-OlEZV7qGyaamz31X3slydehR"
 teleToken = "5291971733:AAHc28SrH3VgTFUpKOLhunzMihCz3Btdqj0"
 chatId = "-657183044"
 
-api_key = "bg_f4ae7e0a6fab17130de0641afb1cda61"
-secret_key = "e9a1b99d7ef0cbe0a428afacbc0480ff73c9812e89481f0ec2199af6be9359a3"
-passphrase = "bitgetcci"
+api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
+secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
+passphrase = "larryapi1"
 
 BTC_Ticker = 'SBTCSUSDT_SUMCBL'
 ETH_Ticker = 'SETHSUSDT_SUMCBL'
@@ -37,6 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
+leverage = 5
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -56,6 +57,9 @@ marketApi = market.MarketApi(api_key, secret_key, passphrase, use_server_time=Fa
 orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
+
+#교차 : crossed
+#격리 : fixed
 
 # chat = telegram.Bot(token = teleToken)
 # updates = chat.getUpdates()
@@ -342,7 +346,6 @@ def test(ticker):
     # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
     global total
     k = 0.5
-    leverage = 10
     fee = 0.1
     candle_data = get_candle(ticker, 86400, 5)
     longTotalPer = 0.0
@@ -763,13 +766,11 @@ if coin == 'SUSDT':
 else:
     # tickers = ['ETCUSDT_UMCBL']
     #'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL',
-    tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
-           'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL',
-           'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL',
-           'AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL',
-           'XEMUSDT_UMCBL', 'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL',
-           'ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
-           'LRCUSDT_UMCBL']
+    # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
+    #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL',
+    #            'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL','ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL', 'LRCUSDT_UMCBL']
+    tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
+               'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
 
 # for t in tickers:
 #     test(t)
@@ -785,7 +786,6 @@ longOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-leverage = 10
 
 # longResult = planApi.place_plan('SBTCSUSDT_SUMCBL', marginCoin=coin, size=0.01, side='open_long', orderType='market',
 #                             triggerPrice=37905,
@@ -794,6 +794,8 @@ leverage = 10
 #                             presetStopLossPrice=36000)
 
 def oneDay():
+    time.sleep(1)
+    
     global buySizes
     global longOrderIds
     global shortOrderIds
@@ -801,6 +803,13 @@ def oneDay():
     for i in range(len(tickers)):
         t = tickers[i]
         print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+
+        accountApi.margin_mode(t, coin, 'fixed')
+        time.sleep(1)
+        accountApi.leverage(t, coin, leverage, 'long')
+        time.sleep(1)
+        accountApi.leverage(t, coin, leverage, 'short')
+        time.sleep(1)
 
         open = 0
         hight = 0
@@ -830,6 +839,21 @@ def oneDay():
                 time.sleep(1)
 
 
+        #지정가 리스트 긁어오기
+        limitList = orderApi.current(t)
+        cancelOrders = []
+        for i in range(0, len(limitList['data'])):
+            data = limitList['data'][i]
+            if data['state'] == 'new':
+                orderId = data['orderId']
+                cancelOrders.append(orderId)
+                
+        #등록된 지정가가 있으면 cancel
+        if len(cancelOrders) > 0:
+            orderApi.cancel_batch_orders(t, coin, cancelOrders)
+
+        time.sleep(1)
+
         marketPrice = marketApi.market_price(t)
         if marketPrice is None:
             print('marketPrice is none')
@@ -852,6 +876,7 @@ def oneDay():
         slPer = 0.01
         currentPrice = float(marketPrice['data']['markPrice'])
         size = 0
+        sizePer = 0.5 #0.1이면 내 자산의 10%
         longPrice = 0
         shortPrice = 0
         longSL = 0
@@ -861,31 +886,31 @@ def oneDay():
             shortPrice = round(close - ((hight - low) * k), 0)
             longSL = round(longPrice-(currentPrice * slPer), 0)
             shortSL = round(shortPrice+(currentPrice * slPer), 0)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
+            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
         elif currentPrice >= 1000:
             longPrice = round(close + ((hight - low) * k), 1)
             shortPrice = round(close - ((hight - low) * k), 1)
             longSL = round(longPrice-(currentPrice * slPer), 1)
             shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 2)
         elif currentPrice >= 100:
             longPrice = round(close + ((hight - low) * k), 1)
             shortPrice = round(close - ((hight - low) * k), 1)
             longSL = round(longPrice-(currentPrice * slPer), 1)
             shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 1)
+            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 1)
         elif currentPrice >= 10:
             longPrice = round(close + ((hight - low) * k), 2)
             shortPrice = round(close - ((hight - low) * k), 2)
             longSL = round(longPrice-(currentPrice * slPer), 2)
             shortSL = round(shortPrice+(currentPrice * slPer), 2)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 0)
+            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
         else:
             longPrice = round(close + ((hight - low) * k), 3)
             shortPrice = round(close - ((hight - low) * k), 3)
             longSL = round(longPrice-(currentPrice * slPer), 3)
             shortSL = round(shortPrice+(currentPrice * slPer), 3)
-            size = round(((myAvailable * 0.1) * leverage) / currentPrice, 0)
+            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
 
         #이전에 걸어둔 예약 매수가 있다면 취소
         if longOrderId > 0:
@@ -896,17 +921,21 @@ def oneDay():
             planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
             shortOrderIds[i] = 0
 
+        time.sleep(1)
+
         #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
         # if buySize > 0:
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
+            time.sleep(1)
             # msg = t, 'sell long', currentPrice
             # bot.sendMessage(chat_id=chatId, text=msg)
             
         result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
         if result is not None:
             buySizes[i] = 0
+            time.sleep(1)
             # msg = t, 'sell short', currentPrice
             # bot.sendMessage(chat_id=chatId, text=msg)
         
@@ -918,9 +947,10 @@ def oneDay():
                                     triggerPrice=longPrice,
                                     executePrice=longPrice,
                                     triggerType='fill_price',
-                                    presetStopLossPrice=longSL)
+                                    presetStopLossPrice=shortPrice)
         if longResult is not None:
             longOrderIds[i] = int(getOrderId(longResult))
+            time.sleep(1)
         else:
             print(t, 'longResult none')
             # continue
@@ -932,10 +962,11 @@ def oneDay():
                                 triggerPrice=shortPrice,
                                 executePrice=shortPrice,
                                 triggerType='fill_price',
-                                presetStopLossPrice=shortSL)
+                                presetStopLossPrice=longPrice)
 
         if shortResult is not None:
             shortOrderIds[i] = int(getOrderId(shortResult))
+            time.sleep(1)
         else:
             print(t, 'shortResult none')
                 # continue
@@ -945,10 +976,25 @@ def oneDay():
         time.sleep(1)
 
 # oneDay()
-# schedule.every(1).minute.do(lambda: oneDay())
+schedule.every().day.at("01:00:01").do(lambda: oneDay())
 
-oneDay()
-schedule.every().day.at("01:00:05").do(lambda: oneDay())
+# schedule.every().day.at("20:00:01").do(lambda: oneDay())
+# schedule.every().day.at("21:00:01").do(lambda: oneDay())
+# schedule.every().day.at("22:00:01").do(lambda: oneDay())
+# schedule.every().day.at("23:00:01").do(lambda: oneDay())
+# schedule.every().day.at("00:00:01").do(lambda: oneDay())
+
+
+# oneDay()
+# # schedule.every(15).minute.do(lambda: oneDay())
+# schedule.every(1).hour.do(lambda: oneDay())
+# schedule.every().hour.at(":00").do(lambda: oneDay())
+# schedule.every().hour.at(":15").do(lambda: oneDay())
+# schedule.every().hour.at(":30").do(lambda: oneDay())
+# schedule.every().hour.at(":45").do(lambda: oneDay())
+
+# oneDay()
+# schedule.every().day.at("01:00:05").do(lambda: oneDay())
 
 # schedule.every().hour.at(":01").do(lambda: oneDay())
 # schedule.every().hour.at(":01").do(lambda: oneDay())
