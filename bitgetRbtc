@@ -18,15 +18,19 @@ import bitget.mix.plan_api as plan
 import bitget.mix.trace_api as trace
 import datetime as pydatetime
 import schedule
-
+import math
 
 api_key = "bg_f4ae7e0a6fab17130de0641afb1cda61"
 secret_key = "e9a1b99d7ef0cbe0a428afacbc0480ff73c9812e89481f0ec2199af6be9359a3"
 passphrase = "bitgetcci"
 
-ticker = 'SBTCSUSDT_SUMCBL'
+ticker = 'BTCUSDT_UMCBL'
 leverage = 10
 check_cci = 95
+excuteMargin = 0.004
+buyMargin = 0.0004
+tkMargin = 0.008
+lossMargin = 0.012
 
 # symbol = 'BTCUSDT_UMCBL'
 
@@ -47,6 +51,11 @@ orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 
+#교차 : crossed
+#격리 : fixed
+accountApi.margin_mode(ticker, marginCoin='USDT', marginMode='fixed')
+accountApi.leverage(ticker, marginCoin='USDT', leverage=leverage, holdSide='long')
+accountApi.leverage(ticker, marginCoin='USDT', leverage=leverage, holdSide='short')
 
 # try:
 
@@ -92,11 +101,11 @@ import numpy as np
 #             "KRW-STRK", "KRW-ETC", "KRW-DOT", "KRW-NEO", "KRW-LINK", "KRW-NEAR", "KRW-REP", "KRW-WAVES", "KRW-QTUM", "KRW-FLOW",
 #             "KRW-OMG", "KRW-WEMIX", "KRW-KAVA", "KRW-GAS", "KRW-SBD", "KRW-TON", "KRW-SAND", "KRW-XTZ", "KRW-THETA", "KRW-AQT",
 #             'KRW-DAWN', 'KRW-BTT']
-# tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL',
+# tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'EOUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL',
 #            'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL', 'SOLUSDT_UMCBL']
 # tickers = ["BTCUSDT_UMCBL"]
 
-tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
+# tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'EOUSDT_UMCBL']
 
 def get_candle(ticker, time, count):
     endTime = int(pydatetime.datetime.now().timestamp())
@@ -122,12 +131,12 @@ def get_cci(candle_data, loop_cnt):
 
         # 계산식 : (Typical Price - Simple Moving Average) / (0.015 * Mean absolute Deviation)
         ordered_df['TP'] = (ordered_df[2] + ordered_df[3] + ordered_df[4]) / 3
-        ordered_df['SMA'] = ordered_df['TP'].rolling(window=7).mean()
-        ordered_df['MAD'] = ordered_df['TP'].rolling(window=7).apply(lambda x: pd.Series(x).mad())
+        ordered_df['SMA'] = ordered_df['TP'].rolling(window=4).mean()
+        ordered_df['MAD'] = ordered_df['TP'].rolling(window=4).apply(lambda x: pd.Series(x).mad())
         ordered_df['CCI'] = (ordered_df['TP'] - ordered_df['SMA']) / (0.015 * ordered_df['MAD'])
  
         # 개수만큼 조립
-        for i in range(0, loop_cnt):            
+        for i in range(0, len(candle_data)):            
             cci_list.append({"type": "CCI", "DT": ordered_df[0].loc[i], "CCI": round(ordered_df['CCI'].loc[i], 4)})
  
         return cci_list
@@ -206,33 +215,33 @@ def getDealPrice(ticker, orderId):
         time.sleep(0.5)
 
 def getSize(ticker, myAvailable, currentPrice):
-    if ticker == 'SBTCSUSDT_SUMCBL':
+    if ticker == 'BTCUSDT_UMCBL':
         size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 3))
         return size
-    elif ticker == 'SETHSUSDT_SUMCBL':
+    elif ticker == 'ETHUSDT_UMCBL':
         size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 2))
         return size
-    elif ticker == 'SEOSSUSDT_SUMCBL':
+    elif ticker == 'EOSUSDT_UMCBL':
         size = int(round(((myAvailable * 0.1) * leverage) / currentPrice, 0))
         return size
     return 0
 
 def getUpline(ticker, currentPrice, per):
-    if ticker == 'SBTCSUSDT_SUMCBL':
+    if ticker == 'BTCUSDT_UMCBL':
         return float(round(currentPrice + (currentPrice * per), 0))
-    elif ticker == 'SETHSUSDT_SUMCBL':
+    elif ticker == 'ETHUSDT_UMCBL':
         return float(round(currentPrice + (currentPrice * per), 1))
-    elif ticker == 'SEOSSUSDT_SUMCBL':
+    elif ticker == 'EOSUSDT_UMCBL':
         return float(round(currentPrice + (currentPrice * per), 3))
     return 0
 
     
 def getDownline(ticker, currentPrice, per):
-    if ticker == 'SBTCSUSDT_SUMCBL':
+    if ticker == 'BTCUSDT_UMCBL':
         return float(round(currentPrice - (currentPrice * per), 0))
-    elif ticker == 'SETHSUSDT_SUMCBL':
+    elif ticker == 'ETHUSDT_UMCBL':
         return float(round(currentPrice - (currentPrice * per), 1))
-    elif ticker == 'SEOSSUSDT_SUMCBL':
+    elif ticker == 'EOSUSDT_UMCBL':
         return float(round(currentPrice - (currentPrice * per), 3))
     return 0
 
@@ -249,7 +258,15 @@ def getOrderId(result):
             return result['data']['orderId']
         time.sleep(0.5)
 
-    
+def getCurrentPrice(price):
+    if ticker == 'BTCUSDT_UMCBL':
+        return float(round(price, 1))
+    elif ticker == 'ETHUSDT_UMCBL':
+        return float(round(price, 1))
+    elif ticker == 'EOSUSDT_UMCBL':
+        return float(round(price, 3))
+    return price
+
 gold = False
 dead = False
 
@@ -286,7 +303,7 @@ def candles15():
     gold = line10<0 and line30>0
     # gold = True
     # dead = True
-    
+   
 def startAuto(ticker):
     isGoldenCross = False
     isDeadCross = False
@@ -299,10 +316,6 @@ def startAuto(ticker):
     check2 = False
     check3 = False
     cciCheckCnt = 0
-    check1Reverse = False
-    check2Reverse = False
-    check3Reverse = False
-    cciCheckCntReverse = 0
     orderId = 0
     triggerOrderId = 0
     
@@ -323,7 +336,7 @@ def startAuto(ticker):
 
         cci_data = get_cci(cci_candle_data, 100)
         cci = round(float(cci_data[-1]['CCI']), 0)
-        # print('cci: ', cci)
+        print('cci: ', cci)
         
         currentPrice = float(cci_candle_data[-1][4])
         # print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, currentPrice)
@@ -333,7 +346,7 @@ def startAuto(ticker):
             if isDeadCross == True:
                 #데드 -> 골드로 바뀐 경우
                 if gold:
-                    # msg = ticker, 'Golden Cross  ', 'CCI:', cci, 'Price:', currentPrice
+                    msg = 'Status Change', 'Golden Cross'
                     # bot.sendMessage(chat_id="-796323955", text=msg)
                     
                     isGoldenCross = True
@@ -347,17 +360,13 @@ def startAuto(ticker):
                     check2 = False
                     check3 = False
                     cciCheckCnt = 0
-                    check1Reverse = False
-                    check2Reverse = False
-                    check3Reverse = False
-                    cciCheckCntReverse = 0
                     orderId = 0
                     triggerOrderId = 0
                     
             elif isGoldenCross == True:
                 #골드 -> 데드로 바뀐 경우
                 if dead:
-                    # msg = ticker, 'Dead Cross  ', 'CCI:', cci, 'Price:', currentPrice
+                    msg = 'Status Change', 'Dead Cross'
                     # bot.sendMessage(chat_id="-796323955", text=msg)      
                     
                     isGoldenCross = False
@@ -371,10 +380,6 @@ def startAuto(ticker):
                     check2 = False
                     check3 = False
                     cciCheckCnt = 0
-                    check1Reverse = False
-                    check2Reverse = False
-                    check3Reverse = False
-                    cciCheckCntReverse = 0
                     orderId = 0
                     triggerOrderId = 0
 
@@ -388,16 +393,16 @@ def startAuto(ticker):
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isDeadCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
-                    msg = ticker, 'Dead Cross'
-                    bot.sendMessage(chat_id="-796323955", text=msg)      
+                    msg = 'Dead Cross'
+                    # bot.sendMessage(chat_id="-796323955", text=msg)      
                     
                 if gold:
                     call='golden cross'
                     print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), ticker, call)
                     isGoldenCross = True
                     # current_price = pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
-                    msg = ticker, 'Golden Cross'
-                    bot.sendMessage(chat_id="-796323955", text=msg)
+                    msg = 'Golden Cross'
+                    # bot.sendMessage(chat_id="-796323955", text=msg)
             else:
                 # cci_data = get_cci(candle_data, 100)
                 # cci = cci_data[-2]['CCI']
@@ -406,77 +411,68 @@ def startAuto(ticker):
                     if check1 == False:
                         if cci >= 110:
                             check1 = True
-                            msg = ticker, 'check1 success', 'CCI:', cci
-                            bot.sendMessage(chat_id="-796323955", text=msg)
-                        continue
-                    
-                    if check2 == False:
+                            msg = 'check1 success', 'CCI:', cci
+                            # bot.sendMessage(chat_id="-796323955", text=msg)
+                    elif check2 == False:
                         if cci <= -110:
                             check2 = True
-                            msg = ticker, 'check2 success', 'CCI:', cci
-                            bot.sendMessage(chat_id="-796323955", text=msg)
-                        continue
-                    
-                    if check3 == False:
+                            msg = 'check2 success', 'CCI:', cci
+                            # bot.sendMessage(chat_id="-796323955", text=msg)
+                    elif check3 == False:
                         if cci >= -95:
                             cciCheckCnt += 1
                             if cciCheckCnt >= 30:
                                 check3 = True
-                                msg = ticker, 'check3 success', 'CCI:', cci
-                                bot.sendMessage(chat_id="-796323955", text=msg)
                                 
                                 #매수
                                 marketPrice = marketApi.market_price(ticker)
                                 currentPrice = float(marketPrice['data']['markPrice'])
                                 print(currentPrice)
+                                currentPrice = getCurrentPrice(currentPrice)
 
                                 maxPrice = currentPrice
-                                # upLinePrice = getUpline(ticker, currentPrice, 0.001 * leverage)
-                                # downLinePrice = getDownline(ticker, currentPrice, 0.0015 * leverage)
-                                upLinePrice = getUpline(ticker, currentPrice, 0.006)
-                                downLinePrice = getDownline(ticker, currentPrice, 0.008)
+                                upLinePrice = math.ceil(getUpline(ticker, currentPrice, tkMargin))
+                                downLinePrice = math.ceil(getDownline(ticker, currentPrice, lossMargin))
                                 
                                 account = accountApi.accounts('sumcbl')
                                 myAvailable = float(account['data'][0]['available'])
                                 size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                                buySize = size
                                 
-                                # limitResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=round(size*0.7,3), side='open_long', orderType='limit', price=currentPrice, timeInForceValue='normal', presetStopLossPrice=downLinePrice)
-                                # marketResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=round(size*0.3,3), side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)                                
-                                # buyOrderId = getOrderId(marketResult)
-                                # limitOrderId = getOrderId(limitResult)
-
-                                # marketResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=(size*0.3), side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)                                                                
-                                # buyOrderId = getOrderId(marketResult)
-                                # # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
-                                # buyPrice = getDealPrice(ticker, buyOrderId)
+                                marketResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='open_long', orderType='limit',
+                                                                    price=math.floor(currentPrice - (currentPrice*buyMargin)), timeInForceValue='normal',
+                                                                    presetStopLossPrice=downLinePrice)                                                                
+                                orderId = int(getOrderId(marketResult))
                                 
-                                # limitResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=(size*0.7), side='open_long', orderType='limit', price=currentPrice-(currentPrice*0.004), timeInForceValue='normal', presetStopLossPrice=downLinePrice)
-                                # limitOrderId = getOrderId(limitResult)
-
-                                marketResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='limit', price=currentPrice, timeInForceValue='normal', presetStopLossPrice=downLinePrice)                                                                
-                                orderId = getOrderId(marketResult)
-                                
+                                msg = 'check3 success', 'CCI:', cci, 'CurrentPrice:', currentPrice
+                                # bot.sendMessage(chat_id="-796323955", text=msg)
 
                                 waitCnt = 600 #10분동안 안사지면 주문 취소 후 다시 시작
-                                while orderId > 0 and waitCnt <= 0:
-                                    detail = orderApi.detail(ticker, orderId=orderId)
+                                while orderId > 0 and waitCnt >= 0:
+                                    detail = orderApi.detail(ticker, orderId)
                                     state = detail['data']['state']
                                     if state == 'filled':
-                                        orderId = 0
                                         buyPrice = getDealPrice(ticker, orderId)    
-                                        msg = ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
-                                        bot.sendMessage(chat_id="-796323955", text=msg)                            
+                                        msg = 'Buy Long', 'CCI:', cci, 'Price:', buyPrice
+                                        # bot.sendMessage(chat_id="-796323955", text=msg)                            
                                         isBuy = True
-                                        trigger = planApi.place_plan(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='limit', triggerPrice=upLinePrice,
-                                                                     executePrice=upLinePrice-(upLinePrice*0.002), triggerType='fill_price')
-                                        triggerOrderId = trigger['data']['orderId']
+                                        trigger = planApi.place_plan(ticker, marginCoin='USDT', size=size, side='close_long', orderType='limit',
+                                                                     triggerPrice=upLinePrice,
+                                                                     executePrice=math.ceil(upLinePrice-(upLinePrice*excuteMargin)),
+                                                                     triggerType='fill_price')
+                                        triggerOrderId = int(trigger['data']['orderId'])
+                                        orderId = 0
                                         break
                                     time.sleep(1)
                                     waitCnt -= 1
                                     
                                 #안사진 경우 초기화
                                 if waitCnt <= 0:
+                                    msg = '지정가를 도달하지 못해 구매하지 못함'
+                                    # bot.sendMessage(chat_id="-796323955", text=msg)
+
+                                    #주문 취소하기
+                                    orderApi.cancel_orders(ticker, 'USDT', orderId)
+                                    
                                     isGoldenCross = False
                                     isDeadCross = False
                                     isBuy = False
@@ -488,18 +484,10 @@ def startAuto(ticker):
                                     check2 = False
                                     check3 = False
                                     cciCheckCnt = 0
-                                    check1Reverse = False
-                                    check2Reverse = False
-                                    check3Reverse = False
-                                    cciCheckCntReverse = 0
                                     orderId = 0
                                     triggerOrderId = 0
-
-
-
                         else:
                             cciCheckCnt = 0
-                            continue
                         
 
                         
@@ -507,7 +495,7 @@ def startAuto(ticker):
                     # if cciLow == False:
                     #     if cci <= check_cci*-1:
                     #         cciLow = True
-                    #         # msg = ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
+                    #         # msg = 'ver2', ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                     #         # bot.sendMessage(chat_id="-796323955", text=msg)
                     # else:
                     #     if cci >= check_cci*-1:
@@ -525,73 +513,107 @@ def startAuto(ticker):
                     #         account = accountApi.accounts('sumcbl')
                     #         myAvailable = float(account['data'][0]['available'])
                     #         size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                    #         buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
+                    #         buyResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
                     #         buyOrderId = buyResult['data']['orderId']
 
                     #         # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
                     #         buyPrice = getDealPrice(ticker, buyOrderId)
                             
-                    #         msg = ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
+                    #         msg = 'ver2', ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
                     #         bot.sendMessage(chat_id="-796323955", text=msg)
                             
                     #         isBuy = True   
                                                                          
                 if isDeadCross == True:
-                    if check1Reverse == False:
+                    if check1 == False:
                         if cci <= -110:
-                            check1Reverse = True
-                            msg = ticker, 'check1Reverse success', 'CCI:', cci
-                            bot.sendMessage(chat_id="-796323955", text=msg)
-                        continue
-                    
-                    if check2Reverse == False:
+                            check1 = True
+                            msg = 'check1Reverse success', 'CCI:', cci
+                            # bot.sendMessage(chat_id="-796323955", text=msg)
+                    elif check2 == False:
                         if cci >= 110:
-                            check2Reverse = True
-                            msg = ticker, 'check2Reverse success', 'CCI:', cci
-                            bot.sendMessage(chat_id="-796323955", text=msg)
-                        continue
-                    
-                    if check3Reverse == False:
+                            check2 = True
+                            msg = 'check2Reverse success', 'CCI:', cci
+                            # bot.sendMessage(chat_id="-796323955", text=msg)
+                    elif check3 == False:
                         if cci <= 95:
-                            cciCheckCntReverse += 1
-                            if cciCheckCntReverse >= 30:
-                                check3Reverse = True
-                                msg = ticker, 'check3Reverse success', 'CCI:', cci
-                                bot.sendMessage(chat_id="-796323955", text=msg)
+                            cciCheckCnt += 1
+                            if cciCheckCnt >= 30:
+                                check3 = True
+                                msg = 'check3Reverse success', 'CCI:', cci
+                                # bot.sendMessage(chat_id="-796323955", text=msg)
                                 
                                 #매수
                                 marketPrice = marketApi.market_price(ticker)
                                 currentPrice = float(marketPrice['data']['markPrice'])
                                 print(currentPrice)
+                                currentPrice = getCurrentPrice(currentPrice)
 
                                 maxPrice = currentPrice
-                                upLinePrice = getUpline(ticker, currentPrice, 0.008)
-                                downLinePrice = getDownline(ticker, currentPrice, 0.006)
+                                upLinePrice = math.floor(getUpline(ticker, currentPrice, lossMargin))
+                                downLinePrice = math.floor(getDownline(ticker, currentPrice, tkMargin))
                                 
                                 account = accountApi.accounts('sumcbl')
                                 myAvailable = float(account['data'][0]['available'])
-                                size = getSize(ticker, myAvailable, currentPrice) #round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                                buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
-                                buyOrderId = buyResult['data']['orderId']
-
-                                # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
-                                buyPrice = getDealPrice(ticker, buyOrderId)
-
-                                msg = ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
-                                bot.sendMessage(chat_id="-796323955", text=msg)
+                                size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
                                 
-                                isBuy = True
+                                #비트코인전용임
+                                marketResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='open_short', orderType='limit',
+                                                                    price=math.ceil(currentPrice + (currentPrice*buyMargin)), timeInForceValue='normal',
+                                                                    presetStopLossPrice=upLinePrice)
+                                orderId = int(getOrderId(marketResult))
+                                
+
+                                waitCnt = 600 #10분동안 안사지면 주문 취소 후 다시 시작
+                                while orderId > 0 and waitCnt >= 0:
+                                    detail = orderApi.detail(ticker, orderId)
+                                    state = detail['data']['state']
+                                    if state == 'filled':
+                                        buyPrice = getDealPrice(ticker, orderId)    
+                                        msg = 'Buy Short', 'CCI:', cci, 'Price:', buyPrice
+                                        # bot.sendMessage(chat_id="-796323955", text=msg)                            
+                                        isBuy = True
+                                        trigger = planApi.place_plan(ticker, marginCoin='USDT', size=size, side='close_short', orderType='limit',
+                                                                     triggerPrice=downLinePrice,
+                                                                     executePrice=math.floor(downLinePrice+(downLinePrice*excuteMargin)),
+                                                                     triggerType='fill_price')
+                                        triggerOrderId = int(trigger['data']['orderId'])
+                                        orderId = 0
+                                        break
+                                    time.sleep(1)
+                                    waitCnt -= 1
+                                    
+                                #안사진 경우 초기화
+                                if waitCnt <= 0:
+                                    msg = '지정가를 도달하지 못해 구매하지 못함'
+                                    # bot.sendMessage(chat_id="-796323955", text=msg)
+
+                                    #주문 취소하기
+                                    orderApi.cancel_orders(ticker, 'USDT', orderId)
+
+                                    isGoldenCross = False
+                                    isDeadCross = False
+                                    isBuy = False
+                                    upLinePrice = 0.0     #익절 라인 + 0.5%
+                                    downLinePrice = 0.0   #손절 라인 -0.5%
+                                    maxPrice = 0.0        #고가
+                                    buyPrice = 0.0        #매수 가격
+                                    check1 = False
+                                    check2 = False
+                                    check3 = False
+                                    cciCheckCnt = 0
+                                    orderId = 0
+                                    triggerOrderId = 0
 
                         else:
-                            cciCheckCntReverse = 0
-                            continue
+                            cciCheckCnt = 0
 
                     
                     # #매수 타이밍 잡기 (cci:+100 이상으로 올라가고 다시 +100으로 내려 갔을때)
                     # if cciHight == False:
                     #     if cci >= check_cci:
                     #         cciHight = True
-                    #         # msg = ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
+                    #         # msg = 'ver2', ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
                     #         # bot.sendMessage(chat_id="-796323955", text=msg)
                     # else:
                     #     if cci <= check_cci:
@@ -609,13 +631,13 @@ def startAuto(ticker):
                     #         account = accountApi.accounts('sumcbl')
                     #         myAvailable = float(account['data'][0]['available'])
                     #         size = getSize(ticker, myAvailable, currentPrice) #round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                    #         buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
+                    #         buyResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
                     #         buyOrderId = buyResult['data']['orderId']
 
                     #         # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
                     #         buyPrice = getDealPrice(ticker, buyOrderId)
 
-                    #         msg = ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
+                    #         msg = 'ver2', ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
                     #         bot.sendMessage(chat_id="-796323955", text=msg)
                             
                     #         isBuy = True
@@ -637,9 +659,13 @@ def startAuto(ticker):
                         priceAvg = float(history['priceAvg'])
                         if priceAvg > 0:
                             rate = getPer(priceAvg, buyPrice)
-                            msg = ticker, 'Sell Long ', 'Rate: ', rate
-                            bot.sendMessage(chat_id="-796323955", text=msg)
+                            msg = 'Sell Long', 'Rate: ', rate
+                            # bot.sendMessage(chat_id="-796323955", text=msg)
 
+                            #트리거 취소하기
+                            planApi.cancel_plan(ticker, marginCoin='USDT', orderId=triggerOrderId, planType='normal_plan')
+                            
+                            
                             isGoldenCross = False
                             isDeadCross = False
                             isBuy = False
@@ -651,12 +677,11 @@ def startAuto(ticker):
                             check2 = False
                             check3 = False
                             cciCheckCnt = 0
-                            check1Reverse = False
-                            check2Reverse = False
-                            check3Reverse = False
-                            cciCheckCntReverse = 0
                             orderId = 0
                             triggerOrderId = 0
+
+                            #15분봉 업데이트
+                            candles15()
 
                             if ma10.iloc[-1] > ma30.iloc[-1]:
                                 isGoldenCross = True
@@ -667,23 +692,24 @@ def startAuto(ticker):
                             else:
                                 isGoldenCross = False
                                 isDeadCross = False
-                            break
     
                 if currentPrice > maxPrice:
                     #고점 갱신
                     if triggerOrderId > 0:
                         maxPrice = currentPrice
                         if maxPrice > upLinePrice:
-                            planApi.modify_plan(ticker, marginCoin='SUSDT', orderId=triggerOrderId, orderType='limit', 
-                                                triggerPrice=maxPrice, executePrice=maxPrice+(maxPrice*0.002), triggerType='fill_price')
+                            print('고점 갱신')
+                            planApi.modify_plan(ticker, marginCoin='USDT', orderId=triggerOrderId, orderType='limit', 
+                                                triggerPrice=math.ceil(maxPrice), executePrice=math.ceil(maxPrice-(maxPrice*excuteMargin)),
+                                                triggerType='fill_price')
         
                 # if currentPrice <= downLinePrice:
                 #     #손절
                 #     #10배수 썼을 경우 수익률
                 #     # marketPrice = marketApi.market_price(ticker)
                 #     # price = float(marketPrice['data']['markPrice'])
-                #     # # sellResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='limit', price=price, timeInForceValue='normal')
-                #     # closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
+                #     # # sellResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='close_long', orderType='limit', price=price, timeInForceValue='normal')
+                #     # closeResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
                 #     # sellOrderId = closeResult['data']['orderId']
 
                 #     # sellDetail = orderApi.detail(ticker, orderId=sellOrderId)
@@ -694,7 +720,7 @@ def startAuto(ticker):
                     
                 #     rate = getPer(downLinePrice, buyPrice)
                 #     totalRate += rate
-                #     msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate
+                #     msg = 'ver2', ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate
                 #     bot.sendMessage(chat_id="-796323955", text=msg)
 
                 #     # saveExcel(ticker, currentPrice, buyPrice)
@@ -735,14 +761,14 @@ def startAuto(ticker):
                 #         print('currentPrice: ', currentPrice, 'maxPrice: ', maxPrice, 'type: ', type(maxPrice), 'max0.2: ', maxPrice + (maxPrice * 0.002))
 
                 #         #익절
-                #         closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
+                #         closeResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
                 #         sellOrderId = closeResult['data']['orderId']
 
                 #         sellPrice = getDealPrice(ticker, sellOrderId)
 
                 #         rate = getPer(sellPrice, buyPrice)
                 #         totalRate += rate
-                #         msg = ticker, 'Sell Long Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(sellPrice-buyPrice, 1), 'Rate: ', rate
+                #         msg = 'ver2', ticker, 'Sell Long Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'sum:', round(sellPrice-buyPrice, 1), 'Rate: ', rate
                 #         bot.sendMessage(chat_id="-796323955", text=msg)
                 #         # saveExcel(ticker, currentPrice, buyPrice)
                         
@@ -776,113 +802,72 @@ def startAuto(ticker):
                 #         continue
                         
             if isDeadCross == True:
-                #차익
-                sum = buyPrice - currentPrice
-                        
+                #제일 먼저 팔렸는지 체크해서 팔렸으면 초기화
+                #손절이던지 익절이던지 어떻게 팔리든 내가 산게 팔린지 체크해야 함
+                startTime = (int(pydatetime.datetime.now().timestamp()) - 6000) * 1000 #100분전
+                endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
+                historyResult = orderApi.history(ticker, startTime, endTime, 1)
+                if historyResult is not None:
+                    historyList = historyResult['data']['orderList']
+                    if historyList is not None:
+                        history = historyList[0]
+                        side = history['side']
+                        if side == 'close_short':
+                            #판매완료 된 경우
+                            priceAvg = float(history['priceAvg'])
+                            if priceAvg > 0:
+                                rate = getPer(priceAvg, buyPrice) * -1
+                                msg = 'Sell Short', 'Rate: ', rate
+                                # bot.sendMessage(chat_id="-796323955", text=msg)
+
+                                #트리거 취소하기
+                                planApi.cancel_plan(ticker, marginCoin='USDT', orderId=triggerOrderId, planType='normal_plan')
+
+                                isGoldenCross = False
+                                isDeadCross = False
+                                isBuy = False
+                                upLinePrice = 0.0     #익절 라인 + 0.5%
+                                downLinePrice = 0.0   #손절 라인 -0.5%
+                                maxPrice = 0.0        #고가
+                                buyPrice = 0.0        #매수 가격
+                                check1 = False
+                                check2 = False
+                                check3 = False
+                                cciCheckCnt = 0
+                                orderId = 0
+                                triggerOrderId = 0
+
+                                #15분봉 업데이트
+                                candles15()
+                                
+                                if ma10.iloc[-1] > ma30.iloc[-1]:
+                                    isGoldenCross = True
+                                    isDeadCross = False
+                                elif ma10.iloc[-1] < ma30.iloc[-1]:
+                                    isGoldenCross = False
+                                    isDeadCross = True
+                                else:
+                                    isGoldenCross = False
+                                    isDeadCross = False
+    
                 if currentPrice < maxPrice:
                     #고점 갱신
-                    maxPrice = currentPrice
-        
-                if currentPrice > upLinePrice:
-                    #손절
-                    # closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_short', orderType='market', timeInForceValue='normal')
-                    # sellOrderId = closeResult['data']['orderId']
-
-                    # sellDetail = orderApi.detail(ticker, orderId=sellOrderId)
-                    # sellPrice = getDealPrice(ticker, buyOrderId)
-
-                    rate = getPer(upLinePrice, buyPrice) * -1
-                    msg = ticker, 'Sell Short', 'Rate: ', rate
-                    bot.sendMessage(chat_id="-796323955", text=msg)
-                    # saveExcel(ticker, currentPrice, buyPrice)
+                    if triggerOrderId > 0:
+                        maxPrice = currentPrice
+                        if maxPrice > upLinePrice:
+                            print('고점 갱신')
+                            planApi.modify_plan(ticker, marginCoin='USDT', orderId=triggerOrderId, orderType='limit', 
+                                                triggerPrice=math.floor(maxPrice), executePrice=math.floor(maxPrice+(maxPrice*excuteMargin)), triggerType='fill_price')
                     
-                    isGoldenCross = False
-                    isDeadCross = False
-                    isBuy = False
-                    upLinePrice = 0.0     #익절 라인 + 0.5%
-                    downLinePrice = 0.0   #손절 라인 -0.5%
-                    maxPrice = 0.0        #고가
-                    buyPrice = 0.0        #매수 가격
-                    check1 = False
-                    check2 = False
-                    check3 = False
-                    cciCheckCnt = 0
-                    check1Reverse = False
-                    check2Reverse = False
-                    check3Reverse = False
-                    cciCheckCntReverse = 0
-                    orderId = 0
-                    triggerOrderId = 0
-
-                    
-                    if ma10.iloc[-1] > ma30.iloc[-1]:
-                        isGoldenCross = True
-                        isDeadCross = False
-                    elif ma10.iloc[-1] < ma30.iloc[-1]:
-                        isGoldenCross = False
-                        isDeadCross = True
-                    else:
-                        isGoldenCross = False
-                        isDeadCross = False
-                    continue
-                
-                #익절 분기점(+5%)을 뚫었을 경우 고점 대비 -20% 내려오면 익절
-                if maxPrice < downLinePrice:
-                    if currentPrice > maxPrice + (maxPrice * 0.002):
-                        print('currentPrice: ', currentPrice, 'maxPrice: ', maxPrice, 'type: ', type(maxPrice), 'max0.2: ', maxPrice + (maxPrice * 0.002))
-
-                        #익절
-                        closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_short', orderType='market', timeInForceValue='normal')
-                        sellOrderId = closeResult['data']['orderId']
-
-                        # sellDetail = orderApi.detail(ticker, orderId=sellOrderId)
-                        sellPrice = getDealPrice(ticker, sellOrderId)
-
-                        rate = getPer(sellPrice, buyPrice) * -1
-                        msg = ticker, 'Sell Short', 'Rate: ', rate
-                        bot.sendMessage(chat_id="-796323955", text=msg)
-                        # saveExcel(ticker, currentPrice, buyPrice)
-
-                        isGoldenCross = False
-                        isDeadCross = False
-                        isBuy = False
-                        upLinePrice = 0.0     #익절 라인 + 0.5%
-                        downLinePrice = 0.0   #손절 라인 -0.5%
-                        maxPrice = 0.0        #고가
-                        buyPrice = 0.0        #매수 가격
-                        check1 = False
-                        check2 = False
-                        check3 = False
-                        cciCheckCnt = 0
-                        check1Reverse = False
-                        check2Reverse = False
-                        check3Reverse = False
-                        cciCheckCntReverse = 0
-                        orderId = 0
-                        triggerOrderId = 0
-
-                        
-                        if ma10.iloc[-1] > ma30.iloc[-1]:
-                            isGoldenCross = True
-                            isDeadCross = False
-                        elif ma10.iloc[-1] < ma30.iloc[-1]:
-                            isGoldenCross = False
-                            isDeadCross = True
-                        else:
-                            isGoldenCross = False
-                            isDeadCross = False
-                        continue
-                    
-        time.sleep(1)                            
+        time.sleep(2)                            
         # time.sleep(len(tickers) * 4)
-
 
 import logging
 import threading
 import time
 
 msg = 'start: ', ticker
-bot.sendMessage(chat_id="-796323955", text=msg)
+# bot.sendMessage(chat_id="-796323955", text=msg)
 
 candles15()
 schedule.every().minute.at(":03").do(candles15) # 매분 23초에 job 실행
@@ -901,7 +886,7 @@ startAuto(ticker)
 
 
 # #테스트 코드
-# ticker = 'SBTCSUSDT_SUMCBL'
+# ticker = 'BTCUSDT_UMCBL'
 
 # candle_data = get_candle(ticker, 9000, 200)
 # for i in range(0, len(candle_data)):
@@ -926,14 +911,14 @@ startAuto(ticker)
 # account = accountApi.accounts('sumcbl')
 # myAvailable = float(account['data'][0]['available'])
 # size = round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-# buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
+# buyResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
 # buyOrderId = buyResult['data']['orderId']
 
 
 # # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
 # buyPrice = getDealPrice(ticker, buyOrderId)
 
-# msg = 'Test Message BitGet ', ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
+# msg = 'ver2', 'Test Message BitGet ', ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
 # bot.sendMessage(chat_id="-796323955", text=msg)
 # time.sleep(10)
 
@@ -941,7 +926,7 @@ startAuto(ticker)
 
 
 
-# closeResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
+# closeResult = orderApi.place_order(ticker, marginCoin='USDT', size=size, side='close_long', orderType='market', timeInForceValue='normal')
 
 # sellOrderId = closeResult['data']['orderId']
 
@@ -949,5 +934,5 @@ startAuto(ticker)
 # sellPrice = getDealPrice(ticker, buyOrderId)
 
 # rate = getPer(sellPrice, buyPrice) * -1
-# msg = 'Test Message BitGet ', ticker, 'Sell Short Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'Rate: ', rate
+# msg = 'ver2', 'Test Message BitGet ', ticker, 'Sell Short Take Profit', 'CCI:', cci, 'Price:', sellPrice, 'Rate: ', rate
 # bot.sendMessage(chat_id="-796323955", text=msg)

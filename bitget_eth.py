@@ -232,7 +232,17 @@ def getDownline(ticker, currentPrice, per):
         return float(round(currentPrice - (currentPrice * 0.005), 3))
     return 0
 
-    
+def getOrderId(result):
+    isCheck = False
+    while isCheck == False:
+        if result.get('data', None).get('orderId', None) is None:
+            print('empty')
+        else:
+            print('not empty')
+            isCheck = True
+            return result['data']['orderId']
+        time.sleep(0.5)
+
     
 gold = False
 dead = False
@@ -278,7 +288,16 @@ def startAuto(ticker):
     maxPrice = 0.0        #고가
     buyPrice = 0.0        #매수 가격
     totalRate = 0.0       #누적 손익
-    
+    check1 = False
+    check2 = False
+    check3 = False
+    cciCheckCnt = 0
+    limitOrderId = 0
+    check1Reverse = False
+    check2Reverse = False
+    check3Reverse = False
+    cciCheckCntReverse = 0
+
     while True:
         schedule.run_pending()
         cci_candle_data = get_candle(ticker, 300, 100)
@@ -292,7 +311,7 @@ def startAuto(ticker):
 
 
         cci_data = get_cci(cci_candle_data, 100)
-        cci = float(cci_data[-2]['CCI'])
+        cci = round(float(cci_data[-1]['CCI']), 0)
         print('cci: ', cci)
         
         currentPrice = float(cci_candle_data[-1][4])
@@ -315,6 +334,16 @@ def startAuto(ticker):
                     downLinePrice = 0.0
                     maxPrice = 0.0
                     buyPrice = 0.0
+                    check1 = False
+                    check2 = False
+                    check3 = False
+                    cciCheckCnt = 0
+                    limitOrderId = 0
+                    check1Reverse = False
+                    check2Reverse = False
+                    check3Reverse = False
+                    cciCheckCntReverse = 0
+
             elif isGoldenCross == True:
                 #골드 -> 데드로 바뀐 경우
                 if dead:
@@ -330,6 +359,15 @@ def startAuto(ticker):
                     downLinePrice = 0.0
                     maxPrice = 0.0
                     buyPrice = 0.0
+                    check1 = False
+                    check2 = False
+                    check3 = False
+                    cciCheckCnt = 0
+                    limitOrderId = 0
+                    check1Reverse = False
+                    check2Reverse = False
+                    check3Reverse = False
+                    cciCheckCntReverse = 0
 
             #한번도 골드나 데드가 안난 경우
             if isGoldenCross == False and isDeadCross == False:                
@@ -356,72 +394,178 @@ def startAuto(ticker):
                 # cci = cci_data[-2]['CCI']
                 
                 if isGoldenCross == True:
-                    #매수 타이밍 잡기 (cci:-100 이하로 떨어지고 다시 -100을 뚫었을때)
-                    if cciLow == False:
-                        if cci <= check_cci*-1:
-                            cciLow = True
-                            # msg = ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
-                            # bot.sendMessage(chat_id="-796323955", text=msg)
-                    else:
-                        if cci >= check_cci*-1:
-                            # 매수 시점
-                            # 여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
-                            # currentPrice = candle_data[0]['trade_price']
-                            marketPrice = marketApi.market_price(ticker)
-                            currentPrice = float(marketPrice['data']['markPrice'])
-                            print(currentPrice)
-
-                            maxPrice = currentPrice
-                            upLinePrice = getUpline(ticker, currentPrice, 0.005)
-                            downLinePrice = getDownline(ticker, currentPrice, 0.007)
-                            
-                            account = accountApi.accounts('sumcbl')
-                            myAvailable = float(account['data'][0]['available'])
-                            size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                            buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
-                            buyOrderId = buyResult['data']['orderId']
-
-                            # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
-                            buyPrice = getDealPrice(ticker, buyOrderId)
-                            
-                            msg = ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
+                    if check1 == False:
+                        if cci >= 110:
+                            check1 = True
+                            msg = ticker, 'check1 success', 'CCI:', cci
                             bot.sendMessage(chat_id="-796323955", text=msg)
+                        continue
+                    
+                    if check2 == False:
+                        if cci <= -110:
+                            check2 = True
+                            msg = ticker, 'check2 success', 'CCI:', cci
+                            bot.sendMessage(chat_id="-796323955", text=msg)
+                        continue
+                    
+                    if check3 == False:
+                        if cci >= -95:
+                            cciCheckCnt += 1
+                            if cciCheckCnt >= 30:
+                                check3 = True
+                                msg = ticker, 'check3 success', 'CCI:', cci
+                                bot.sendMessage(chat_id="-796323955", text=msg)
+                                
+                                #매수
+                                marketPrice = marketApi.market_price(ticker)
+                                currentPrice = float(marketPrice['data']['markPrice'])
+                                print(currentPrice)
+
+                                maxPrice = currentPrice
+                                # upLinePrice = getUpline(ticker, currentPrice, 0.001 * leverage)
+                                # downLinePrice = getDownline(ticker, currentPrice, 0.0015 * leverage)
+                                upLinePrice = getUpline(ticker, currentPrice, 0.006)
+                                downLinePrice = getDownline(ticker, currentPrice, 0.006)
+                                
+                                account = accountApi.accounts('sumcbl')
+                                myAvailable = float(account['data'][0]['available'])
+                                size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+                                
+                                # limitResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=round(size*0.7,3), side='open_long', orderType='limit', price=currentPrice, timeInForceValue='normal', presetStopLossPrice=downLinePrice)
+                                marketResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
+                                buyOrderId = getOrderId(marketResult)
+                                # limitOrderId = getOrderId(limitResult)
+                                
+                                # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
+                                buyPrice = getDealPrice(ticker, buyOrderId)
+                                
+                                msg = ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
+                                bot.sendMessage(chat_id="-796323955", text=msg)
+                                
+                                isBuy = True   
+
+                        else:
+                            cciCheckCnt = 0
+                            continue
+                        
+                        
+                        
+                    # #매수 타이밍 잡기 (cci:-100 이하로 떨어지고 다시 -100을 뚫었을때)
+                    # if cciLow == False:
+                    #     if cci <= check_cci*-1:
+                    #         cciLow = True
+                    #         # msg = ticker, 'Buy Long CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
+                    #         # bot.sendMessage(chat_id="-796323955", text=msg)
+                    # else:
+                    #     if cci >= check_cci*-1:
+                    #         # 매수 시점
+                    #         # 여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
+                    #         # currentPrice = candle_data[0]['trade_price']
+                    #         marketPrice = marketApi.market_price(ticker)
+                    #         currentPrice = float(marketPrice['data']['markPrice'])
+                    #         print(currentPrice)
+
+                    #         maxPrice = currentPrice
+                    #         upLinePrice = getUpline(ticker, currentPrice, 0.005)
+                    #         downLinePrice = getDownline(ticker, currentPrice, 0.007)
                             
-                            isBuy = True   
+                    #         account = accountApi.accounts('sumcbl')
+                    #         myAvailable = float(account['data'][0]['available'])
+                    #         size = getSize(ticker, myAvailable, currentPrice) # round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+                    #         buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_long', orderType='market', timeInForceValue='normal', presetStopLossPrice=downLinePrice)
+                    #         buyOrderId = buyResult['data']['orderId']
+
+                    #         # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
+                    #         buyPrice = getDealPrice(ticker, buyOrderId)
+                            
+                    #         msg = ticker, 'Buy Long ', 'CCI:', cci, 'Price:', buyPrice
+                    #         bot.sendMessage(chat_id="-796323955", text=msg)
+                            
+                    #         isBuy = True   
                                                                          
                 if isDeadCross == True:
-                    #매수 타이밍 잡기 (cci:+100 이상으로 올라가고 다시 +100으로 내려 갔을때)
-                    if cciHight == False:
-                        if cci >= check_cci:
-                            cciHight = True
-                            # msg = ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
-                            # bot.sendMessage(chat_id="-796323955", text=msg)
-                    else:
-                        if cci <= check_cci:
-                            #매수 시점
-                            # #여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
-                            # currentPrice = candle_data[0]['trade_price']
-                            marketPrice = marketApi.market_price(ticker)
-                            currentPrice = float(marketPrice['data']['markPrice'])
-                            print(currentPrice)
-
-                            maxPrice = currentPrice
-                            upLinePrice = getUpline(ticker, currentPrice, 0.007)
-                            downLinePrice = getDownline(ticker, currentPrice, 0.005)
-                            
-                            account = accountApi.accounts('sumcbl')
-                            myAvailable = float(account['data'][0]['available'])
-                            size = getSize(ticker, myAvailable, currentPrice) #round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
-                            buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
-                            buyOrderId = buyResult['data']['orderId']
-
-                            # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
-                            buyPrice = getDealPrice(ticker, buyOrderId)
-
-                            msg = ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
+                    if check1Reverse == False:
+                        if cci <= -110:
+                            check1Reverse = True
+                            msg = ticker, 'check1Reverse success', 'CCI:', cci
                             bot.sendMessage(chat_id="-796323955", text=msg)
+                        continue
+                    
+                    if check2Reverse == False:
+                        if cci >= 110:
+                            check2Reverse = True
+                            msg = ticker, 'check2Reverse success', 'CCI:', cci
+                            bot.sendMessage(chat_id="-796323955", text=msg)
+                        continue
+                    
+                    if check3Reverse == False:
+                        if cci <= 95:
+                            cciCheckCntReverse += 1
+                            if cciCheckCntReverse >= 30:
+                                check3Reverse = True
+                                msg = ticker, 'check3Reverse success', 'CCI:', cci
+                                bot.sendMessage(chat_id="-796323955", text=msg)
+                                
+                                #매수
+                                marketPrice = marketApi.market_price(ticker)
+                                currentPrice = float(marketPrice['data']['markPrice'])
+                                print(currentPrice)
+
+                                maxPrice = currentPrice
+                                upLinePrice = getUpline(ticker, currentPrice, 0.0015 * leverage)
+                                downLinePrice = getDownline(ticker, currentPrice, 0.001 * leverage)
+                                
+                                account = accountApi.accounts('sumcbl')
+                                myAvailable = float(account['data'][0]['available'])
+                                size = getSize(ticker, myAvailable, currentPrice) #round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+                                buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
+                                buyOrderId = buyResult['data']['orderId']
+
+                                # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
+                                buyPrice = getDealPrice(ticker, buyOrderId)
+
+                                msg = ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
+                                bot.sendMessage(chat_id="-796323955", text=msg)
+                                
+                                isBuy = True
+
+                        else:
+                            cciCheckCntReverse = 0
+                            continue
+
+                    
+                    # #매수 타이밍 잡기 (cci:+100 이상으로 올라가고 다시 +100으로 내려 갔을때)
+                    # if cciHight == False:
+                    #     if cci >= check_cci:
+                    #         cciHight = True
+                    #         # msg = ticker, 'Buy Short CCI Check1 Success ', 'CCI:', cci, 'Price:', currentPrice
+                    #         # bot.sendMessage(chat_id="-796323955", text=msg)
+                    # else:
+                    #     if cci <= check_cci:
+                    #         #매수 시점
+                    #         # #여긴 updateCCI 함수의 sleep으로 인해 값을 갱신해 줘야 함
+                    #         # currentPrice = candle_data[0]['trade_price']
+                    #         marketPrice = marketApi.market_price(ticker)
+                    #         currentPrice = float(marketPrice['data']['markPrice'])
+                    #         print(currentPrice)
+
+                    #         maxPrice = currentPrice
+                    #         upLinePrice = getUpline(ticker, currentPrice, 0.007)
+                    #         downLinePrice = getDownline(ticker, currentPrice, 0.005)
                             
-                            isBuy = True
+                    #         account = accountApi.accounts('sumcbl')
+                    #         myAvailable = float(account['data'][0]['available'])
+                    #         size = getSize(ticker, myAvailable, currentPrice) #round(((myAvailable * 0.1) * leverage) / currentPrice, 2)
+                    #         buyResult = orderApi.place_order(ticker, marginCoin='SUSDT', size=size, side='open_short', orderType='market', timeInForceValue='normal', presetStopLossPrice=upLinePrice)
+                    #         buyOrderId = buyResult['data']['orderId']
+
+                    #         # buyDetail = orderApi.detail(ticker, orderId=buyOrderId)
+                    #         buyPrice = getDealPrice(ticker, buyOrderId)
+
+                    #         msg = ticker, 'Buy Short ', 'CCI:', cci, 'Price:', buyPrice
+                    #         bot.sendMessage(chat_id="-796323955", text=msg)
+                            
+                    #         isBuy = True
                             
         else:
             #구매중인 경우 판매시점 잡기
@@ -445,6 +589,9 @@ def startAuto(ticker):
                     # sellDetail = orderApi.detail(ticker, orderId=sellOrderId)
                     # sellPrice = getDealPrice(ticker, buyOrderId)
 
+                    #이거 손절 치기
+                    #limitOrderId
+                    
                     rate = getPer(downLinePrice, buyPrice)
                     totalRate += rate
                     msg = ticker, 'Sell Long Stop Loss', 'CCI:', cci, 'Price:', downLinePrice, 'sum:', round(downLinePrice-buyPrice, 1), 'Rate: ', rate
@@ -459,7 +606,16 @@ def startAuto(ticker):
                     downLinePrice = 0.0   #손절 라인 -0.5%
                     maxPrice = 0.0        #고가
                     buyPrice = 0.0        #매수 가격
-                    
+                    check1 = False
+                    check2 = False
+                    check3 = False
+                    cciCheckCnt = 0
+                    limitOrderId = 0
+                    check1Reverse = False
+                    check2Reverse = False
+                    check3Reverse = False
+                    cciCheckCntReverse = 0
+
                     if ma10.iloc[-1] > ma30.iloc[-1]:
                         isGoldenCross = True
                         isDeadCross = False
@@ -495,6 +651,15 @@ def startAuto(ticker):
                         downLinePrice = 0.0   #손절 라인 -0.5%
                         maxPrice = 0.0        #고가
                         buyPrice = 0.0        #매수 가격
+                        check1 = False
+                        check2 = False
+                        check3 = False
+                        cciCheckCnt = 0
+                        limitOrderId = 0
+                        check1Reverse = False
+                        check2Reverse = False
+                        check3Reverse = False
+                        cciCheckCntReverse = 0
 
                         if ma10.iloc[-1] > ma30.iloc[-1]:
                             isGoldenCross = True
@@ -536,6 +701,15 @@ def startAuto(ticker):
                     downLinePrice = 0.0   #손절 라인 -0.5%
                     maxPrice = 0.0        #고가
                     buyPrice = 0.0        #매수 가격
+                    check1 = False
+                    check2 = False
+                    check3 = False
+                    cciCheckCnt = 0
+                    limitOrderId = 0
+                    check1Reverse = False
+                    check2Reverse = False
+                    check3Reverse = False
+                    cciCheckCntReverse = 0
 
                     if ma10.iloc[-1] > ma30.iloc[-1]:
                         isGoldenCross = True
@@ -573,6 +747,15 @@ def startAuto(ticker):
                         downLinePrice = 0.0   #손절 라인 -0.5%
                         maxPrice = 0.0        #고가
                         buyPrice = 0.0        #매수 가격
+                        check1 = False
+                        check2 = False
+                        check3 = False
+                        cciCheckCnt = 0
+                        limitOrderId = 0
+                        check1Reverse = False
+                        check2Reverse = False
+                        check3Reverse = False
+                        cciCheckCntReverse = 0
 
                         if ma10.iloc[-1] > ma30.iloc[-1]:
                             isGoldenCross = True
@@ -585,7 +768,7 @@ def startAuto(ticker):
                             isDeadCross = False
                         continue
                     
-        time.sleep(5)                            
+        time.sleep(1)                            
         # time.sleep(len(tickers) * 4)
 
 
