@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 5
+leverage = 2
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -876,7 +876,7 @@ def oneDay():
         slPer = 0.01
         currentPrice = float(marketPrice['data']['markPrice'])
         size = 0
-        sizePer = 0.5 #0.1이면 내 자산의 10%
+        sizePer = 0.1 #0.1이면 내 자산의 10%
         longPrice = 0
         shortPrice = 0
         longSL = 0
