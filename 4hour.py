@@ -805,9 +805,7 @@ def oneDay():
         print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
 
         accountApi.margin_mode(t, coin, 'fixed')
-        time.sleep(1)
         accountApi.leverage(t, coin, leverage, 'long')
-        time.sleep(1)
         accountApi.leverage(t, coin, leverage, 'short')
         time.sleep(1)
 
@@ -879,37 +877,37 @@ def oneDay():
         sizePer = 0.1 #0.1이면 내 자산의 10%
         longPrice = 0
         shortPrice = 0
-        longSL = 0
-        shortSL = 0
+        # longSL = 0
+        # shortSL = 0
         if currentPrice >= 10000:
             longPrice = round(close + ((hight - low) * k), 0)
             shortPrice = round(close - ((hight - low) * k), 0)
-            longSL = round(longPrice-(currentPrice * slPer), 0)
-            shortSL = round(shortPrice+(currentPrice * slPer), 0)
+            # longSL = round(longPrice-(currentPrice * slPer), 0)
+            # shortSL = round(shortPrice+(currentPrice * slPer), 0)
             size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
         elif currentPrice >= 1000:
             longPrice = round(close + ((hight - low) * k), 1)
             shortPrice = round(close - ((hight - low) * k), 1)
-            longSL = round(longPrice-(currentPrice * slPer), 1)
-            shortSL = round(shortPrice+(currentPrice * slPer), 1)
+            # longSL = round(longPrice-(currentPrice * slPer), 1)
+            # shortSL = round(shortPrice+(currentPrice * slPer), 1)
             size = round(((myAvailable * sizePer) * leverage) / currentPrice, 2)
         elif currentPrice >= 100:
             longPrice = round(close + ((hight - low) * k), 1)
             shortPrice = round(close - ((hight - low) * k), 1)
-            longSL = round(longPrice-(currentPrice * slPer), 1)
-            shortSL = round(shortPrice+(currentPrice * slPer), 1)
+            # longSL = round(longPrice-(currentPrice * slPer), 1)
+            # shortSL = round(shortPrice+(currentPrice * slPer), 1)
             size = round(((myAvailable * sizePer) * leverage) / currentPrice, 1)
         elif currentPrice >= 10:
             longPrice = round(close + ((hight - low) * k), 2)
             shortPrice = round(close - ((hight - low) * k), 2)
-            longSL = round(longPrice-(currentPrice * slPer), 2)
-            shortSL = round(shortPrice+(currentPrice * slPer), 2)
+            # longSL = round(longPrice-(currentPrice * slPer), 2)
+            # shortSL = round(shortPrice+(currentPrice * slPer), 2)
             size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
         else:
             longPrice = round(close + ((hight - low) * k), 3)
             shortPrice = round(close - ((hight - low) * k), 3)
-            longSL = round(longPrice-(currentPrice * slPer), 3)
-            shortSL = round(shortPrice+(currentPrice * slPer), 3)
+            # longSL = round(longPrice-(currentPrice * slPer), 3)
+            # shortSL = round(shortPrice+(currentPrice * slPer), 3)
             size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
 
         #이전에 걸어둔 예약 매수가 있다면 취소
