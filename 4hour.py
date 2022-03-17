@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 2
+leverage = 20
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -769,8 +769,9 @@ else:
     # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
     #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL',
     #            'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL','ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL', 'LRCUSDT_UMCBL']
-    tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
-               'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
+    # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
+    #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
+    tickers = ['BTCUSDT_UMCBL']
 
 # for t in tickers:
 #     test(t)
@@ -804,7 +805,9 @@ def oneDay():
         t = tickers[i]
         print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
 
-        accountApi.margin_mode(t, coin, 'fixed')
+        #교차 : crossed
+        #격리 : fixed
+        accountApi.margin_mode(t, coin, 'crossed')
         accountApi.leverage(t, coin, leverage, 'long')
         accountApi.leverage(t, coin, leverage, 'short')
         time.sleep(1)
@@ -874,7 +877,7 @@ def oneDay():
         slPer = 0.01
         currentPrice = float(marketPrice['data']['markPrice'])
         size = 0
-        sizePer = 0.1 #0.1이면 내 자산의 10%
+        sizePer = 0.2 #0.1이면 내 자산의 10%
         longPrice = 0
         shortPrice = 0
         # longSL = 0
@@ -973,7 +976,7 @@ def oneDay():
 
         time.sleep(1)
 
-oneDay()
+# oneDay()
 schedule.every().day.at("01:00:01").do(lambda: oneDay())
 
 # schedule.every().day.at("20:00:01").do(lambda: oneDay())
