@@ -877,7 +877,7 @@ def oneDay():
         slPer = 0.01
         currentPrice = float(marketPrice['data']['markPrice'])
         size = 0
-        sizePer = 0.2 #0.1이면 내 자산의 10%
+        sizePer = 0.5 #0.1이면 내 자산의 10%
         longPrice = 0
         shortPrice = 0
         # longSL = 0
