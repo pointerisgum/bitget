@@ -883,11 +883,17 @@ def oneDay():
         # longSL = 0
         # shortSL = 0
         if currentPrice >= 10000:
-            longPrice = round(close + ((hight - low) * k), 0)
-            shortPrice = round(close - ((hight - low) * k), 0)
-            # longSL = round(longPrice-(currentPrice * slPer), 0)
-            # shortSL = round(shortPrice+(currentPrice * slPer), 0)
-            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
+            buffer = round((hight - low) * k, 0)
+            if buffer < close * 0.02:
+                buffer = close * 0.02
+            longPrice = round(close + buffer, 0)
+            shortPrice = round(close - buffer, 0)
+            size = 0.2
+            # longPrice = round(close + ((hight - low) * k), 0)
+            # shortPrice = round(close - ((hight - low) * k), 0)
+            ## longSL = round(longPrice-(currentPrice * slPer), 0)
+            ## shortSL = round(shortPrice+(currentPrice * slPer), 0)
+            # size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
         elif currentPrice >= 1000:
             longPrice = round(close + ((hight - low) * k), 1)
             shortPrice = round(close - ((hight - low) * k), 1)
