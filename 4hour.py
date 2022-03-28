@@ -886,9 +886,12 @@ def oneDay():
             buffer = round((hight - low) * k, 0)
             if buffer < close * 0.02:
                 buffer = close * 0.02
+            elif buffer > close * 0.04:
+                buffer = close * 0.04
+
             longPrice = round(close + buffer, 0)
             shortPrice = round(close - buffer, 0)
-            size = 0.15
+            size = 0.2
             # longPrice = round(close + ((hight - low) * k), 0)
             # shortPrice = round(close - ((hight - low) * k), 0)
             ## longSL = round(longPrice-(currentPrice * slPer), 0)
