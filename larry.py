@@ -1045,6 +1045,7 @@ def oneDay():
         time.sleep(1)
 
 def monitoring():
+    print('!!!!!!!!!')
     for i in range(len(tickers)):
         t = tickers[i]
     
@@ -1080,7 +1081,7 @@ oneDay()
 schedule.every().day.at("01:00:01").do(lambda: oneDay())
 
 monitoring()
-schedule.every(10).minute.do(lambda: monitoring())
+schedule.every(600).seconds.do(lambda: monitoring())
 
 bot.sendMessage(chat_id=chatId, text='program start')
 
