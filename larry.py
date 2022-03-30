@@ -9,7 +9,6 @@ import pyupbit
 import telegram
 from datetime import datetime
 from datetime import date
-import datetime
 import pandas as pd
 import openpyxl
 import bitget.mix.market_api as market
@@ -34,11 +33,13 @@ chatId = "-682086795"
 api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
 secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
 passphrase = "lsh790308"
+myAvailable = 8000
 
 #내꺼
 # api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
 # secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
 # passphrase = "larryapi1"
+# myAvailable = 800
 
 BTC_Ticker = 'SBTCSUSDT_SUMCBL'
 ETH_Ticker = 'SETHSUSDT_SUMCBL'
@@ -52,7 +53,7 @@ excuteMargin = 0.004
 buyMargin = 0.0004
 tkMargin = 0.01
 lossMargin = 0.01
-myAvailable = 8000
+
 # symbol = 'BTCUSDT_UMCBL'
 
 
@@ -1048,7 +1049,7 @@ def monitoring():
         t = tickers[i]
     
         day = date.today().strftime("%Y-%m-%d") + ' 01:00:00'
-        startTime = int(time.mktime(datetime.datetime.strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
+        startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
         endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
         historyResult = orderApi.history(t, startTime, endTime, 10)
         historyList = historyResult['data']['orderList']
@@ -1081,6 +1082,7 @@ schedule.every().day.at("01:00:01").do(lambda: oneDay())
 monitoring()
 schedule.every(10).minute.do(lambda: monitoring())
 
+bot.sendMessage(chat_id=chatId, text='program start')
 
 # schedule.every().day.at("20:00:01").do(lambda: oneDay())
 # schedule.every().day.at("21:00:01").do(lambda: oneDay())
