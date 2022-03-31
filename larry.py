@@ -466,7 +466,6 @@ def oneDay():
     global buySizes
     global longOrderIds
     global shortOrderIds
-    # global day
     
     for i in range(len(tickers)):
         t = tickers[i]
@@ -729,7 +728,7 @@ def monitoring():
                         per = (((currentPrice/buyPrice)*100)-100) * -1
                         msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
                     
-                    # bot.sendMessage(chat_id=chatId, text=msg)
+                    bot.sendMessage(chat_id=chatId, text=msg)
                     print(msg)
         time.sleep(0.1)
 
