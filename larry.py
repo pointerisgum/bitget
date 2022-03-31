@@ -1066,16 +1066,17 @@ def monitoring():
                     per = 0
                     if h['side'] == 'open_long':
                         per = ((currentPrice/buyPrice)*100)-100
-                        msg = t + ':(long) ' + str(round(per, 2)) + '%'
+                        msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
                     if h['side'] == 'open_short':
                         per = (((currentPrice/buyPrice)*100)-100) * -1
-                        msg = t + ':(short) ' + str(round(per, 2)) + '%'
+                        msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
                     
                     bot.sendMessage(chat_id=chatId, text=msg)
                     print(msg)
         time.sleep(0.1)
 
 
+bot.sendMessage(chat_id=chatId, text='program start')
 
 oneDay()
 schedule.every().day.at("01:00:01").do(lambda: oneDay())
@@ -1083,7 +1084,6 @@ schedule.every().day.at("01:00:01").do(lambda: oneDay())
 monitoring()
 schedule.every(600).seconds.do(lambda: monitoring())
 
-bot.sendMessage(chat_id=chatId, text='program start')
 
 # schedule.every().day.at("20:00:01").do(lambda: oneDay())
 # schedule.every().day.at("21:00:01").do(lambda: oneDay())
