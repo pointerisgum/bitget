@@ -33,7 +33,7 @@ chatId = "-682086795"
 api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
 secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
 passphrase = "lsh790308"
-myAvailable = 7000
+myAvailable = 8000
 
 #내꺼
 # api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
@@ -688,59 +688,56 @@ def oneDay():
 
         time.sleep(1)
 
-def monitoring():
-    for i in range(len(tickers)):
-        t = tickers[i]
+# def monitoring():
+#     for i in range(len(tickers)):
+#         t = tickers[i]
 
-        day = date.today()
-        nowHour = datetime.now().hour
-        if nowHour < 1:
-            day = date.today() + timedelta(days=-1)
+#         day = date.today()
+#         nowHour = datetime.now().hour
+#         if nowHour < 1:
+#             day = date.today() + timedelta(days=-1)
 
-        day = day.strftime("%Y-%m-%d") + ' 01:00:00'
+#         day = day.strftime("%Y-%m-%d") + ' 01:00:00'
 
-        startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
-        endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
-        historyResult = orderApi.history(t, startTime, endTime, 10)
-        historyList = historyResult['data']['orderList']
-        if historyList is not None:
-            lastTime = 0
-            lastIdx = 0
-            for i in range(len(historyList)):
-                cTime = float(historyList[i]['cTime'])
-                if cTime > lastTime:
-                    lastTime = cTime
-                    lastIdx = i
+#         startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
+#         endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
+#         historyResult = orderApi.history(t, startTime, endTime, 10)
+#         historyList = historyResult['data']['orderList']
+#         if historyList is not None:
+#             lastTime = 0
+#             lastIdx = 0
+#             for i in range(len(historyList)):
+#                 cTime = float(historyList[i]['cTime'])
+#                 if cTime > lastTime:
+#                     lastTime = cTime
+#                     lastIdx = i
                     
-            h = historyList[lastIdx]
-            if (h['side'] == 'open_long' or h['side'] == 'open_short') and h['state'] == 'filled':
-                #매수 한 경우
-                marketPrice = marketApi.market_price(t)
-                if marketPrice is not None:
-                    currentPrice = float(marketPrice['data']['markPrice'])
-                    buyPrice = float(h['priceAvg'])
-                    #((현재가/구매가)*100)-100
-                    per = 0
-                    if h['side'] == 'open_long':
-                        per = ((currentPrice/buyPrice)*100)-100
-                        msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
-                    if h['side'] == 'open_short':
-                        per = (((currentPrice/buyPrice)*100)-100) * -1
-                        msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
+#             h = historyList[lastIdx]
+#             if (h['side'] == 'open_long' or h['side'] == 'open_short') and h['state'] == 'filled':
+#                 #매수 한 경우
+#                 marketPrice = marketApi.market_price(t)
+#                 if marketPrice is not None:
+#                     currentPrice = float(marketPrice['data']['markPrice'])
+#                     buyPrice = float(h['priceAvg'])
+#                     #((현재가/구매가)*100)-100
+#                     per = 0
+#                     if h['side'] == 'open_long':
+#                         per = ((currentPrice/buyPrice)*100)-100
+#                         msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
+#                     if h['side'] == 'open_short':
+#                         per = (((currentPrice/buyPrice)*100)-100) * -1
+#                         msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
                     
-                    bot.sendMessage(chat_id=chatId, text=msg)
-                    print(msg)
-        time.sleep(0.1)
+#                     bot.sendMessage(chat_id=chatId, text=msg)
+#                     print(msg)
+#         time.sleep(0.1)
 
 
 
-bot.sendMessage(chat_id=chatId, text='program start')
+# bot.sendMessage(chat_id=chatId, text='program start')
 
-oneDay()
+# oneDay()
 schedule.every().day.at("01:00:01").do(lambda: oneDay())
-
-monitoring()
-schedule.every(600).seconds.do(lambda: monitoring())
 
 
 # schedule.every().day.at("20:00:01").do(lambda: oneDay())
