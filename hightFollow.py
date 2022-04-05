@@ -7,8 +7,7 @@ import traceback
 import upbit_api
 import pyupbit
 import telegram
-from datetime import datetime, timedelta
-from datetime import date
+from datetime import datetime
 import pandas as pd
 import openpyxl
 import bitget.mix.market_api as market
@@ -25,21 +24,12 @@ import time
 access = "xwdEMciw0PeGRfpA8xMaVtnVGmFPFxTR6dkKCnUQ"
 secret = "UOxwdGYVZflyTCbMwrlrzB0Ey44GGxSLl70xp8A4"
 slackToken = "xoxb-2958422443234-2961015128436-OlEZV7qGyaamz31X3slydehR"
-teleToken = "5144034355:AAGsuZQrk9oDIEa2PqzUuQQObXvFrCs3h10"
-chatId = "-682086795"
+teleToken = "5291971733:AAHc28SrH3VgTFUpKOLhunzMihCz3Btdqj0"
+chatId = "-657183044"
 
-
-#승훈이형꺼
-api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
-secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
-passphrase = "lsh790308"
-myAvailable = 8000
-
-#내꺼
-# api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
-# secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
-# passphrase = "larryapi1"
-# myAvailable = 800
+api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
+secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
+passphrase = "larryapi1"
 
 BTC_Ticker = 'SBTCSUSDT_SUMCBL'
 ETH_Ticker = 'SETHSUSDT_SUMCBL'
@@ -47,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 10
+leverage = 1
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -67,8 +57,6 @@ marketApi = market.MarketApi(api_key, secret_key, passphrase, use_server_time=Fa
 orderApi = order.OrderApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
-positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
-
 
 #교차 : crossed
 #격리 : fixed
@@ -313,20 +301,51 @@ def candles15():
     
     dead = line10>0 and line30<0
     gold = line10<0 and line30>0
+    # gold = True
+    # dead = True
 
 
 
 
+# longOrderId = 0
+# shortOrderId = 0
 buySize = 0
-k_long = 0.3
-k_short = 0.7
+k = 0.5
 longOrderId = 0
 shortOrderId = 0
+ 
+# def buyCheck():
+#     print('buyCheck()')
+#     if longOrderId > 0:
+#         longDetail = orderApi.detail(ticker, longOrderId)
+#         if longDetail is not None:
+#             longState = longDetail['data']['state']
+#             if longState == 'filled':
+#                 #롱 매수시 숏 걸어둔거 취소
+#                 print('롱 매수되어 숏 취소')
+#                 planApi.cancel_plan(ticker, coin, shortOrderId, 'normal_plan')
+#                 longOrderId = 0
+#                 shortOrderId = 0
+     
+#     if shortOrderId > 0:   
+#         shortDetail = orderApi.detail(ticker, shortOrderId)
+#         if shortDetail is not None:
+#             shortState = shortDetail['data']['state']
+#             if shortState == 'filled':
+#                 #숏 매수시 롱 걸어둔거 취소
+#                 print('숏 매수되어 롱 취소')
+#                 planApi.cancel_plan(ticker, coin, longOrderId, 'normal_plan')
+#                 longOrderId = 0
+#                 shortOrderId = 0
+
+
+
 total = 0.0
 
 def test(ticker):
     # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
     global total
+    k = 0.5
     fee = 0.1
     candle_data = get_candle(ticker, 86400, 5)
     longTotalPer = 0.0
@@ -392,25 +411,6 @@ def test(ticker):
     print()
 
 
-# tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL',
-#            'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL', 'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL', 'SOLUSDT_UMCBL', 'MATICUSDT_UMCBL',
-#            'BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'AAVEUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL', 'ATOMUSDT_UMCBL',
-#            'XTZUSDT_UMCBL', 'SUSHIUSDT_UMCBL', 'AXSUSDT_UMCBL', 'THETAUSDT_UMCBL', 'AVAXUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'DASHUSDT_UMCBL',
-#            'SHIBUSDT_UMCBL', 'XEMUSDT_UMCBL', 'MANAUSDT_UMCBL', 'GALAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'DYDXUSDT_UMCBL', 'CRVUSDT_UMCBL',
-#            'NEARUSDT_UMCBL', 'EGLDUSDT_UMCBL', 'KSMUSDT_UMCBL', 'ARUSDT_UMCBL', 'RENUSDT_UMCBL', 'FTMUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
-#            'LRCUSDT_UMCBL', 'NEOUSDT_UMCBL', 'ALICEUSDT_UMCBL']
-
-# for i in range(len(tickers)):
-#     hour = '15:22:01' + '%02d' % (i+1)
-#     schedule.every().day.at(hour).do(lambda: oneDay())
-#     # schedule.every(3).seconds.do(lambda: oneDay(t))
-#     # time.sleep(0.05)
-
-
-        
-
-
-
 if coin == 'SUSDT':
     tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
     # tickers = ['SBTCSUSDT_SUMCBL']
@@ -422,16 +422,41 @@ else:
     #            'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL','ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL', 'LRCUSDT_UMCBL']
     # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
     #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
-    tickers = ['BTCUSDT_UMCBL', 
-               'ETHUSDT_UMCBL',
-               'XRPUSDT_UMCBL','ADAUSDT_UMCBL', 'DOTUSDT_UMCBL', 'SANDUSDT_UMCBL', 'MANAUSDT_UMCBL', 
-               'LINKUSDT_UMCBL', 'NEOUSDT_UMCBL', 'MATICUSDT_UMCBL', 'SOLUSDT_UMCBL', 'UNIUSDT_UMCBL',
-               'FILUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'NEARUSDT_UMCBL', 'ALICEUSDT_UMCBL']
+    tickers = ['BTCUSDT_UMCBL']
+    # tickers = ['SBTCSUSDT_SUMCBL']
 
+tickers = []
+tickerDict = {}
 
+def initTickers():
+    global tickers
+    global tickerDict
+    
+    for d in tickerDict:
+        if bool(d.get('orderId')) == True:
+            if d['type'] == 'long':
+                orderApi.place_order(t, marginCoin=coin, size=d['size'], side='close_long', orderType='market', timeInForceValue='normal')
+            else:
+                orderApi.place_order(t, marginCoin=coin, size=d['size'], side='close_short', orderType='market', timeInForceValue='normal')        
 
+    tickers = []
+    tickerDict = {}    
+    result = marketApi.tickers('UMCBL')
+    for t in result['data']:
+        tickers.append(t['symbol'])
+        tickerDict[t['symbol']] = {}
+    tickers.remove('BTCUSDT_UMCBL')
+    tickers.remove('ETHUSDT_UMCBL')
+    
+    # #오늘 이미 많이 올라서 임시로 뺄 애들
+    # tickers.remove('WAVESUSDT_UMCBL')
+    # tickers.remove('WAVESUSDT_UMCBL')
 
-
+# print(tickerDict['XRPUSDT_UMCBL'])
+# tickerDict['XRPUSDT_UMCBL']['orderId'] = '123'
+# tickerDict['XRPUSDT_UMCBL']['size'] = '3'
+# print(tickerDict)
+# print(tickerDict['XRPUSDT_UMCBL']['orderId'])
 # for t in tickers:
 #     test(t)
 #     time.sleep(0.05)
@@ -453,32 +478,50 @@ shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 #                             triggerType='fill_price',
 #                             presetStopLossPrice=36000)
 
-def getSizePer(t):
-    return 0.1
-    # if t == 'BTCUSDT_UMCBL':
-    #     return 0.3
-    # elif t == 'ETHUSDT_UMCBL':
-    #     return 0.3
-    # else:
-    #     return 0.08
+def getSizePer():
+    return 0.5
 
-def oneDay():
-    time.sleep(1)
+def getSize(t):
+    available = 100 #내가 투자 할 총 시드
+    
+    marketPrice = marketApi.market_price(t)
+    if marketPrice is None:
+        print('marketPrice is none')
+    price = float(marketPrice['data']['markPrice'])
+    
+    if price >= 10000:
+        size = round(((available * getSizePer()) * leverage) / price, 3)
+    elif price >= 1000:
+        size = round(((available * getSizePer()) * leverage) / price, 2)
+    elif price >= 100:
+        size = round(((available * getSizePer()) * leverage) / price, 1)
+    elif price >= 10:
+        size = round(((available * getSizePer()) * leverage) / price, 0)
+    else:
+        size = round(((available * getSizePer()) * leverage) / price, 0)
+    
+    return size
+
+
+            
+def check():
+    now = int(pydatetime.datetime.now().timestamp())
+    if now < 1649174400:
+        return
     
     global buySizes
     global longOrderIds
     global shortOrderIds
-    
+
     for i in range(len(tickers)):
         t = tickers[i]
         print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
 
         #교차 : crossed
         #격리 : fixed
-        accountApi.margin_mode(t, coin, 'fixed')
+        accountApi.margin_mode(t, coin, 'crossed')
         accountApi.leverage(t, coin, leverage, 'long')
         accountApi.leverage(t, coin, leverage, 'short')
-        time.sleep(1)
 
         open = 0
         hight = 0
@@ -487,327 +530,79 @@ def oneDay():
         
         while True:
             # period: 60, 300, 900, 1800, 3600,14400,43200, 86400, 604800
-            candle_data = get_candle(t, 86400, 2)
+            candle_data = get_candle(t, 86400, 0)
             
             if candle_data == None:
                 time.sleep(1)
                 continue
-            
-            if len(candle_data) > 1:
-                # print(t, candle_data[-2])
-                open = float(candle_data[-2][1]) #전날 고가
-                hight = float(candle_data[-2][2]) #전날 고가
-                low = float(candle_data[-2][3]) #전날 저가
-                close = float(candle_data[-2][4]) #전날 종가
-
-                if hight > 0 and low > 0 and close > 0:
-                    break
-                else:
-                    time.sleep(1)
-            else:
-                time.sleep(1)
-
-
-        #지정가 리스트 긁어오기
-        limitList = orderApi.current(t)
-        cancelOrders = []
-        for i in range(0, len(limitList['data'])):
-            data = limitList['data'][i]
-            if data['state'] == 'new':
-                orderId = data['orderId']
-                cancelOrders.append(orderId)
+            elif len(candle_data) > 0:
+                open = float(candle_data[0][1])
+                hight = float(candle_data[0][2])
+                low = float(candle_data[0][3])
+                close = float(candle_data[0][4])
+                # time.sleep(0.1)
+                break
                 
-        #등록된 지정가가 있으면 cancel
-        if len(cancelOrders) > 0:
-            orderApi.cancel_batch_orders(t, coin, cancelOrders)
-
-        time.sleep(1)
-
-        marketPrice = marketApi.market_price(t)
-        if marketPrice is None:
-            print('marketPrice is none')
         
-        # print(currentPrice)
-        # currentPrice = getCurrentPrice(currentPrice)
-        if coin == 'SUSDT':
-            account = accountApi.accounts('sumcbl')
-        else:
-            account = accountApi.accounts('umcbl')
-        
-        # myAvailable = float(account['data'][0]['available'])
-        # size = getSize(t, myAvailable, currentPrice)
-
-        longOrderId = longOrderIds[i]
-        shortOrderId = shortOrderIds[i]
-        buySize = buySizes[i]
-
-
-        # slPer = 0.01
-        currentPrice = float(marketPrice['data']['markPrice'])
-        size = 0
-        # sizePer = 0.5 #0.1이면 내 자산의 10%
-        longPrice = 0
-        shortPrice = 0
-        # longSL = 0
-        # shortSL = 0
-        if currentPrice >= 10000:
-            # size = 0.2
-            # longPrice = round(close + ((hight - low) * k), 0)
-            # shortPrice = round(close - ((hight - low) * k), 0)
-            ## longSL = round(longPrice-(currentPrice * slPer), 0)
-            ## shortSL = round(shortPrice+(currentPrice * slPer), 0)
-
-            # buffer = round((hight - low) * k, 0)
-            # if buffer < close * 0.02:
-            #     buffer = close * 0.02
-            # elif buffer > close * 0.04:
-            #     buffer = close * 0.04
-            
-            # longPrice = round(close + buffer, 0)
-            # shortPrice = round(close - buffer, 0)
-            # # size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 3)
-            # size = round(((500) * leverage) / currentPrice, 3)
-            
-            long_buffer = round((hight - low) * k_long, 0)
-            short_buffer = round((hight - low) * k_short, 0)
-            longPrice = round(close + long_buffer, 0)
-            shortPrice = round(close - short_buffer, 0)
-            size = round(((500) * leverage) / currentPrice, 3)
-            
-        elif currentPrice >= 1000:
-            # longPrice = round(close + ((hight - low) * k), 1)
-            # shortPrice = round(close - ((hight - low) * k), 1)
-            # longSL = round(longPrice-(currentPrice * slPer), 1)
-            # shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            
-            # buffer = round((hight - low) * k, 1)
-            # if buffer < close * 0.02:
-            #     buffer = close * 0.02
-            # elif buffer > close * 0.04:
-            #     buffer = close * 0.04
-
-            # longPrice = round(close + buffer, 1)
-            # shortPrice = round(close - buffer, 1)
-            # # size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 2)
-            # size = round(((500) * leverage) / currentPrice, 2)
-            
-            
-            long_buffer = round((hight - low) * k_long, 1)
-            short_buffer = round((hight - low) * k_short, 1)
-            longPrice = round(close + long_buffer, 1)
-            shortPrice = round(close - short_buffer, 1)
-            size = round(((500) * leverage) / currentPrice, 2)
-
-        elif currentPrice >= 100:
-            # longPrice = round(close + ((hight - low) * k), 1)
-            # shortPrice = round(close - ((hight - low) * k), 1)
-            # longSL = round(longPrice-(currentPrice * slPer), 1)
-            # shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            
-            # buffer = round((hight - low) * k, 1)
-            # if buffer < close * 0.02:
-            #     buffer = close * 0.02
-            # elif buffer > close * 0.04:
-            #     buffer = close * 0.04
+        maxPer = 0.07 #몇퍼 이상 올랐을때 매수 할지에 대한 값
+        minPer = 0.02 #고점 대비 얼마나 빠질때 팔지에 대한 값
+        #구매하지 않은 경우
+        if bool(tickerDict[t].get('orderId')) == False:
+            #변동폭 체크
+            if close > open + (open * maxPer):
+                size = getSize(t)
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
+                tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                tickerDict[t]['size'] = size
+                tickerDict[t]['type'] = 'long'
+                print('buy long : ', t, buyResult)
                 
-            # longPrice = round(close + buffer, 1)
-            # shortPrice = round(close - buffer, 1)
-            # # size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 1)
-            # size = round(((500) * leverage) / currentPrice, 1)
-            
-            long_buffer = round((hight - low) * k_long, 1)
-            short_buffer = round((hight - low) * k_short, 1)
-            longPrice = round(close + long_buffer, 1)
-            shortPrice = round(close - short_buffer, 1)
-            size = round(((500) * leverage) / currentPrice, 1)
+            elif close < open - (open * maxPer):
+                size = getSize(t)
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
+                tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                tickerDict[t]['size'] = size
+                tickerDict[t]['type'] = 'short'
+                print('buy short : ', t, buyResult)
 
-        elif currentPrice >= 10:
-            # longPrice = round(close + ((hight - low) * k), 2)
-            # shortPrice = round(close - ((hight - low) * k), 2)
-            # longSL = round(longPrice-(currentPrice * slPer), 2)
-            # shortSL = round(shortPrice+(currentPrice * slPer), 2)
-            
-            # buffer = round((hight - low) * k, 2)
-            # if buffer < close * 0.02:
-            #     buffer = close * 0.02
-            # elif buffer > close * 0.04:
-            #     buffer = close * 0.04
-                
-            # longPrice = round(close + buffer, 2)
-            # shortPrice = round(close - buffer, 2)
-            # # size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 0)
-            # size = round(((500) * leverage) / currentPrice, 0)
-            
-            long_buffer = round((hight - low) * k_long, 2)
-            short_buffer = round((hight - low) * k_short, 2)
-            longPrice = round(close + long_buffer, 2)
-            shortPrice = round(close - short_buffer, 2)
-            size = round(((500) * leverage) / currentPrice, 0)
+        #구매한 경우
         else:
-            # longPrice = round(close + ((hight - low) * k), 3)
-            # shortPrice = round(close - ((hight - low) * k), 3)
-            # longSL = round(longPrice-(currentPrice * slPer), 3)
-            # shortSL = round(shortPrice+(currentPrice * slPer), 3)
+            # orderId = tickerDict[t]['orderId']
+            # print('orderId : ' + orderId)
+            # #다음날로 넘어갔을때 (시가와 종가의 차이가 거의 없을때를 이때로 봄)
+            # if close <= open + (open * minPer) or close >= open - (open * minPer):
+            #     orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='market', timeInForceValue='normal')
+            #     orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='market', timeInForceValue='normal')
+            #     print('장이 끝났는데도 팔지 못한 경우 시장가 매도')
+
+            marketPrice = marketApi.market_price(t)
+            if marketPrice is None:
+                print('marketPrice is none')
+            currentPrice = float(marketPrice['data']['markPrice'])
             
-            # buffer = round((hight - low) * k, 3)
-            # if buffer < close * 0.02:
-            #     buffer = close * 0.02
-            # elif buffer > close * 0.04:
-            #     buffer = close * 0.04
-                
-            # longPrice = round(close + buffer, 3)
-            # shortPrice = round(close - buffer, 3)
-            # size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 0)
+            #롱 매수한 경우
+            if tickerDict[t]['type'] == 'long':
+                if currentPrice < hight - (hight * minPer):
+                    sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='market', timeInForceValue='normal')
+                    print('sell long : ', t, sellResult)
             
-            long_buffer = round((hight - low) * k_long, 3)
-            short_buffer = round((hight - low) * k_short, 3)
-            longPrice = round(close + long_buffer, 3)
-            shortPrice = round(close - short_buffer, 3)
-            size = round(((500) * leverage) / currentPrice, 0)
-            
-        #이전에 걸어둔 예약 매수가 있다면 취소
-        if longOrderId > 0:
-            planApi.cancel_plan(t, coin, longOrderId, 'normal_plan')
-            longOrderIds[i] = 0
-        
-        if shortOrderId > 0:
-            planApi.cancel_plan(t, coin, shortOrderId, 'normal_plan')
-            shortOrderIds[i] = 0
-
-        time.sleep(1)
-
-        #구매중인게 있을 수 있으니 시작과 동시에 시장가 매도
-        # if buySize > 0:
-        result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_long', orderType='market', timeInForceValue='normal')
-        if result is not None:
-            buySizes[i] = 0
-            time.sleep(1)
-            # msg = t, 'sell long', currentPrice
-            # bot.sendMessage(chat_id=chatId, text=msg)
-            
-        result = orderApi.place_order(t, marginCoin=coin, size=buySize, side='close_short', orderType='market', timeInForceValue='normal')
-        if result is not None:
-            buySizes[i] = 0
-            time.sleep(1)
-            # msg = t, 'sell short', currentPrice
-            # bot.sendMessage(chat_id=chatId, text=msg)
-        
-        # if open <= close:
-            #롱 예약
-            # msg = t, 'add long', currentPrice
-            # bot.sendMessage(chat_id=chatId, text=msg)
-        longResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='market',
-                                    triggerPrice=longPrice,
-                                    executePrice=longPrice,
-                                    triggerType='fill_price',
-                                    presetStopLossPrice=shortPrice)
-        if longResult is not None:
-            longOrderIds[i] = int(getOrderId(longResult))
-            time.sleep(1)
-        else:
-            print(t, 'longResult none')
-            # continue
-        # else:
-            #숏 예약
-            # msg = t, 'add short', currentPrice
-            # bot.sendMessage(chat_id=chatId, text=msg)
-        shortResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='market',
-                                triggerPrice=shortPrice,
-                                executePrice=shortPrice,
-                                triggerType='fill_price',
-                                presetStopLossPrice=longPrice)
-
-        if shortResult is not None:
-            shortOrderIds[i] = int(getOrderId(shortResult))
-            time.sleep(1)
-        else:
-            print(t, 'shortResult none')
-                # continue
-
-        buySizes[i] = size
-
-        time.sleep(1)
-
-# def monitoring():
-#     for i in range(len(tickers)):
-#         t = tickers[i]
-
-#         day = date.today()
-#         nowHour = datetime.now().hour
-#         if nowHour < 1:
-#             day = date.today() + timedelta(days=-1)
-
-#         day = day.strftime("%Y-%m-%d") + ' 01:00:00'
-
-#         startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
-#         endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
-#         historyResult = orderApi.history(t, startTime, endTime, 10)
-#         historyList = historyResult['data']['orderList']
-#         if historyList is not None:
-#             lastTime = 0
-#             lastIdx = 0
-#             for i in range(len(historyList)):
-#                 cTime = float(historyList[i]['cTime'])
-#                 if cTime > lastTime:
-#                     lastTime = cTime
-#                     lastIdx = i
-                    
-#             h = historyList[lastIdx]
-#             if (h['side'] == 'open_long' or h['side'] == 'open_short') and h['state'] == 'filled':
-#                 #매수 한 경우
-#                 marketPrice = marketApi.market_price(t)
-#                 if marketPrice is not None:
-#                     currentPrice = float(marketPrice['data']['markPrice'])
-#                     buyPrice = float(h['priceAvg'])
-#                     #((현재가/구매가)*100)-100
-#                     per = 0
-#                     if h['side'] == 'open_long':
-#                         per = ((currentPrice/buyPrice)*100)-100
-#                         msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
-#                     if h['side'] == 'open_short':
-#                         per = (((currentPrice/buyPrice)*100)-100) * -1
-#                         msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
-                    
-#                     bot.sendMessage(chat_id=chatId, text=msg)
-#                     print(msg)
-#         time.sleep(0.1)
+            #숏 매수한 경우
+            elif tickerDict[t]['type'] == 'short':
+                if currentPrice > low + (low * minPer):
+                    sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='market', timeInForceValue='normal')
+                    print('sell short : ', t, sellResult)
 
 
 
-# bot.sendMessage(chat_id=chatId, text='program start')
-
-# oneDay()
-schedule.every().day.at("01:00:01").do(lambda: oneDay())
 
 
-# schedule.every().day.at("20:00:01").do(lambda: oneDay())
-# schedule.every().day.at("21:00:01").do(lambda: oneDay())
-# schedule.every().day.at("22:00:01").do(lambda: oneDay())
-# schedule.every().day.at("23:00:01").do(lambda: oneDay())
-# schedule.every().day.at("00:00:01").do(lambda: oneDay())
 
+# initTickers()
+# check()
+schedule.every().day.at("01:00:01").do(lambda: initTickers())
+# schedule.every().day.at("01:03:00").do(lambda: check())
+checkSchedule = schedule.every(60).seconds.do(lambda: check())
 
-# oneDay()
-# # schedule.every(15).minute.do(lambda: oneDay())
-# schedule.every(1).hour.do(lambda: oneDay())
-# schedule.every().hour.at(":00").do(lambda: oneDay())
-# schedule.every().hour.at(":15").do(lambda: oneDay())
-# schedule.every().hour.at(":30").do(lambda: oneDay())
-# schedule.every().hour.at(":45").do(lambda: oneDay())
-
-# oneDay()
-# schedule.every().day.at("01:00:05").do(lambda: oneDay())
-
-# schedule.every().hour.at(":01").do(lambda: oneDay())
-# schedule.every().hour.at(":01").do(lambda: oneDay())
-# schedule.every().hour.at(":16").do(lambda: oneDay())
-# schedule.every().hour.at(":31").do(lambda: oneDay())
-# schedule.every().hour.at(":46").do(lambda: oneDay())
-# oneDay()
-# time.sleep(30)
-# oneDay()
-
-# schedule.every().day.at('15:53:01').do(lambda: oneDay())
 
 while True:
     schedule.run_pending()
