@@ -653,8 +653,11 @@ def check():
 
 
 def isNowCross(t, granularity):
-    candle_data = get_candle(t, granularity, 100)
     time.sleep(0.01)
+
+    candle_data = get_candle(t, granularity, 100)
+    if candle_data is None:
+        return ''
 
     for i in range(0, len(candle_data)):
         candle_data[i][0] = float(candle_data[i][0])
@@ -675,11 +678,14 @@ def isNowCross(t, granularity):
 
 
 def updateCross(t):
+    time.sleep(0.01)
+
     tickerDict[t]['cross'] = ''
     
     candle_data = get_candle(t, 60, 100)
-    time.sleep(0.01)
-
+    if candle_data is None:
+        return
+    
     for i in range(0, len(candle_data)):
         candle_data[i][0] = float(candle_data[i][0])
         candle_data[i][1] = float(candle_data[i][1])
