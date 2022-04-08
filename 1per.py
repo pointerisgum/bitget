@@ -213,8 +213,13 @@ def getDealPrice(ticker, orderId):
             return result['data']['priceAvg']
         time.sleep(0.5)
 
-def getSize(ticker, myAvailable, currentPrice):
-    return round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
+def getSize(ticker, myAvailable, currentPrice):    
+    closeStr = str(currentPrice).split('.')
+    digits = 1
+    if len(closeStr) == 2:
+        digits = len(closeStr[1])  #소수점 몇자리인지
+
+    return round(((myAvailable * 0.1) * leverage) / currentPrice, digits)
     # if ticker == BTC_Ticker:
     #     size = str(((myAvailable * 0.1) * leverage) / currentPrice)
     #     return size
@@ -270,39 +275,6 @@ def getCurrentPrice(price):
 gold = False
 dead = False
 
-def candles15():
-    print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '15min candles call')
-    
-    candle_data = get_candle(ticker, 900, 100)
-    if candle_data == None:
-        return
-    
-    for i in range(0, len(candle_data)):
-        candle_data[i][0] = float(candle_data[i][0]) #타임
-        candle_data[i][1] = float(candle_data[i][1]) #시가
-        candle_data[i][2] = float(candle_data[i][2]) #고가
-        candle_data[i][3] = float(candle_data[i][3]) #저가
-        candle_data[i][4] = float(candle_data[i][4]) #종가
-
-    global dead
-    global gold
-    global ma10
-    global ma30
-    
-    df = pd.DataFrame(candle_data)
-    # df=df['trade_price'].iloc[::-1]
-    df=df[4].iloc[::1] #4번째가 종가임
-
-    ma10 = df.rolling(window=10).mean()
-    ma30 = df.rolling(window=30).mean()
-
-    line10=ma10.iloc[-3]-ma30.iloc[-3]
-    line30=ma10.iloc[-2]-ma30.iloc[-2]
-    
-    dead = line10>0 and line30<0
-    gold = line10<0 and line30>0
-    # gold = True
-    # dead = True
 
 
 
@@ -432,28 +404,28 @@ def initTickers():
     global tickers
     global tickerDict
     
-    for i in range(len(tickers)):
-        key = tickers[i]
-        dic = tickerDict[key]
-        if bool(dic.get('orderId')) == True:
-            if dic['type'] == 'long':
-                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_long', orderType='market', timeInForceValue='normal')
-                print(t + 'long' + '시장가로 던짐')
-            else:
-                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_short', orderType='market', timeInForceValue='normal')        
-                print(t + 'short' + '시장가로 던짐')
+    # for i in range(len(tickers)):
+    #     key = tickers[i]
+    #     dic = tickerDict[key]
+    #     if bool(dic.get('orderId')) == True:
+    #         if dic['type'] == 'long':
+    #             orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_long', orderType='market', timeInForceValue='normal')
+    #             print(t + 'long' + '시장가로 던짐')
+    #         else:
+    #             orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_short', orderType='market', timeInForceValue='normal')        
+    #             print(t + 'short' + '시장가로 던짐')
 
     tickers = []
     tickerDict = {}    
     result = marketApi.tickers('UMCBL')
     for t in result['data']:
         tickers.append(t['symbol'])
-        tickerDict[t['symbol']] = {}
+        tickerDict[t['symbol']] = {'lossCnt':1, 'targetPer':0.011, 'cross':''}
     tickers.remove('BTCUSDT_UMCBL')
-    tickers.remove('ETHUSDT_UMCBL')
+
     
-    # tickers = ['SOLUSDT_UMCBL']
-    # tickerDict['SOLUSDT_UMCBL'] = {}
+    # tickers = ['GMTUSDT_UMCBL']
+    # tickerDict['GMTUSDT_UMCBL'] = {'lossCnt':1, 'targetPer':0.011, 'cross':''}
     #오늘 이미 많이 올라서 임시로 뺄 애들
     # tickers.remove('NEARUSDT_UMCBL')
     # tickers.remove('WAVESUSDT_UMCBL')
@@ -488,7 +460,7 @@ def getSizePer():
     return 0.5
 
 def getSize(t):
-    available = 200 #내가 투자 할 총 시드
+    available = 100 #내가 투자 할 총 시드
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -517,11 +489,24 @@ def check():
     global buySizes
     global longOrderIds
     global shortOrderIds
-
+    # print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'check')
+    
     for i in range(len(tickers)):
         t = tickers[i]
-        print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
-
+        # print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
+        updateCross(t)
+        cross = tickerDict[t]['cross']
+        
+        isMaxBuy = False
+        orderCnt = 0
+        for j in range(len(tickers)):
+            if bool(tickerDict[tickers[j]].get('orderId')) == True:
+                if int(tickerDict[tickers[j]]['orderId']) > 0:
+                    orderCnt+=1
+                    if orderCnt >= 3:
+                        isMaxBuy = True
+                        break
+            
         #교차 : crossed
         #격리 : fixed
         accountApi.margin_mode(t, coin, 'crossed')
@@ -547,8 +532,8 @@ def check():
                 close = float(candle_data[0][4])
                 # time.sleep(0.1)
                 break
-                
         
+                       
         buyPrice = -1
         if bool(tickerDict[t].get('orderId')) == True:
             result = orderApi.detail(t, orderId=tickerDict[t]['orderId'])
@@ -559,85 +544,160 @@ def check():
                     buyPrice = float(result['data']['priceAvg'])
 
 
-
+        if bool(tickerDict[t].get('sellOrderId')) == True:
+            result = orderApi.detail(t, orderId=tickerDict[t]['sellOrderId'])
+            if result is not None:
+                if result.get('data', None).get('state', None) is not None:
+                    if result['data']['state'] == 'filled':
+                        del tickerDict[t]['sellOrderId']
+    
+    
         closeStr = str(close).split('.')
         digits = 1
         if len(closeStr) == 2:
-                digits = len(closeStr[1])  #소수점 몇자리인지
+            digits = len(closeStr[1])  #소수점 몇자리인지
 
-        maxPer = 0.07 #몇퍼 이상 올랐을때 매수 할지에 대한 값
-        minPer = 0.02 #고점 대비 얼마나 빠질때 팔지에 대한 값
-        limitPer = 0.08 #체크 한계선
-        
-        #구매하지 않은 경우
-        if bool(tickerDict[t].get('orderId')) == False:
-            #변동폭 체크
-            if close > round(open + (open * maxPer), digits) and hight < round(open + (open * (limitPer)), digits):
-                size = getSize(t)
-                buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
-                if buyResult is None:
-                    print('buyResult is None')
+        #골든 또는 데드가 났는데 구매하지 않은 경우 무조건 구매
+        if isMaxBuy == False and (cross == 'gold' or cross == 'dead') and bool(tickerDict[t].get('orderId')) == False and bool(tickerDict[t].get('sellOrderId')) == False and buyPrice == -1:
+            #주문 전 등록된 체결이 안된 주문이 있으면 취소처리를 먼저 해준다
+            limitList = orderApi.current(t)
+            cancelOrders = []
+            for i in range(0, len(limitList['data'])):
+                data = limitList['data'][i]
+                if data['state'] == 'new':
+                    orderId = data['orderId']
+                    cancelOrders.append(orderId)
+                    
+            if len(cancelOrders) > 0:
+                if cross == 'gold':
+                    print(t, '데드 -> 골드로 포지션 변경되어 주문취소')
                 else:
-                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
-                    tickerDict[t]['size'] = size
+                    print(t, '골드 -> 데드로 포지션 변경되어 주문취소')
+                orderApi.cancel_batch_orders(t, coin, cancelOrders)
+
+
+            lossCnt = tickerDict[t]['lossCnt']
+            size = getSize(t) * lossCnt
+            if cross == 'gold':
+                # buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=close, timeInForceValue='normal')
+                if buyResult is None:
+                    print('buyResult is None', 'size : ', size, 'price : ', close)
+                else:
                     tickerDict[t]['type'] = 'long'
-                    print('buy long : ', t, buyResult)
-                
-            elif close < round(open - (open * maxPer), digits) and low > round(open - (open * (limitPer)), digits):
-                size = getSize(t)
-                buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                    print(t, 'buy long : ', buyResult)
+            else:
+                # buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=close, timeInForceValue='normal')
                 if buyResult is None:
-                    print('buyResult is None')
+                    print('buyResult is None', 'size : ', size, 'price : ', close)
                 else:
-                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
-                    tickerDict[t]['size'] = size
                     tickerDict[t]['type'] = 'short'
-                    print('buy short : ', t, buyResult)
+                    print(t, 'buy short : ', buyResult)
+
+            if buyResult is None:
+                print('buyResult is None')
+            else:
+                tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                tickerDict[t]['size'] = size
 
         #구매한 경우
         else:
-            # orderId = tickerDict[t]['orderId']
-            # print('orderId : ' + orderId)
-            # #다음날로 넘어갔을때 (시가와 종가의 차이가 거의 없을때를 이때로 봄)
-            # if close <= open + (open * minPer) or close >= open - (open * minPer):
-            #     orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='market', timeInForceValue='normal')
-            #     orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='market', timeInForceValue='normal')
-            #     print('장이 끝났는데도 팔지 못한 경우 시장가 매도')
-
             if buyPrice > 0:
-                # marketPrice = marketApi.market_price(t)
-                # if marketPrice is None:
-                #     print('marketPrice is none')
-                # currentPrice = float(marketPrice['data']['markPrice'])
-                
-                #롱 매수한 경우
+                targetPer = tickerDict[t]['targetPer']
                 if tickerDict[t]['type'] == 'long':
-                    if close < hight - (hight * minPer):
+                    if close > round(buyPrice + (buyPrice * targetPer), digits):   #1% 먹었을때 매도
                         sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
-                        print('sell long : ', t, sellResult)
-                
-                #숏 매수한 경우
+                        if sellResult is None:
+                            print('sellResult is None')
+                        else:
+                            del tickerDict[t]['orderId']
+                            tickerDict[t]['sellOrderId'] = sellResult['data']['orderId']
+                            tickerDict[t]['lossCnt'] = 1
+                            print('win', t)
+                    elif close < round(buyPrice - (buyPrice * targetPer), digits): #1% 읽었을때 매도
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                        if sellResult is None:
+                            print('sellResult is None')
+                        else:
+                            del tickerDict[t]['orderId']
+                            tickerDict[t]['sellOrderId'] = sellResult['data']['orderId']
+                            lossCnt = tickerDict[t]['lossCnt']
+                            tickerDict[t]['lossCnt'] = lossCnt * 2
+                            print('loss', t, 'lossCnt = ', tickerDict[t]['lossCnt'])
                 elif tickerDict[t]['type'] == 'short':
-                    if close > low + (low * minPer):
+                    if close < round(buyPrice - (buyPrice * targetPer), digits):   #1% 먹었을때 매도
                         sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
-                        print('sell short : ', t, sellResult)
+                        if sellResult is None:
+                            print('sellResult is None')
+                        else:
+                            del tickerDict[t]['orderId']
+                            tickerDict[t]['sellOrderId'] = sellResult['data']['orderId']
+                            tickerDict[t]['lossCnt'] = 1
+                            print('win', t)
+                    elif close > round(buyPrice + (buyPrice * targetPer), digits): #1% 읽었을때 매도
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
+                        if sellResult is None:
+                            print('sellResult is None')
+                        else:
+                            del tickerDict[t]['orderId']
+                            tickerDict[t]['sellOrderId'] = sellResult['data']['orderId']
+                            lossCnt = tickerDict[t]['lossCnt']
+                            tickerDict[t]['lossCnt'] = lossCnt * 2
+                            print('loss', t, 'lossCnt = ', tickerDict[t]['lossCnt'])
+      
 
+
+
+
+def updateCross(t):
+    candle_data = get_candle(t, 60, 100)
+
+    for i in range(0, len(candle_data)):
+        candle_data[i][0] = float(candle_data[i][0])
+        candle_data[i][1] = float(candle_data[i][1])
+        candle_data[i][2] = float(candle_data[i][2])
+        candle_data[i][3] = float(candle_data[i][3])
+        candle_data[i][4] = float(candle_data[i][4])
+
+    
+    df = pd.DataFrame(candle_data)
+    # df=df['trade_price'].iloc[::-1]
+    df=df[4].iloc[::1] #4번째가 종가임
+
+    ma10 = df.rolling(window=10).mean()
+    ma30 = df.rolling(window=30).mean()
+
+    line10=ma10.iloc[-2]-ma30.iloc[-2]
+    line30=ma10.iloc[-1]-ma30.iloc[-1]
+    
+    dead = line10>0 and line30<0
+    gold = line10<0 and line30>0
+
+    if dead == True or gold == True:
+        if dead == True:
+            # print(t, '포지션 변경 데드크로스')
+            tickerDict[t]['cross'] = 'dead'
+        elif gold == True:
+            # print(t, '포지션 변경 골든크로스')
+            tickerDict[t]['cross'] = 'gold'
+    else:
+        tickerDict[t]['cross'] = ''
+
+
+
+# initTickers()
+# check()
+# # schedule.every().day.at("01:00:01").do(lambda: initTickers())
+# # schedule.every().day.at("01:03:00").do(lambda: check())
+# checkSchedule = schedule.every(5).seconds.do(lambda: check())
 
 
 
 
 
 initTickers()
-check()
-schedule.every().day.at("01:00:01").do(lambda: initTickers())
-# schedule.every().day.at("01:03:00").do(lambda: check())
-checkSchedule = schedule.every(60).seconds.do(lambda: check())
-
-
-
-
-
-
 while True:
+    check()
     schedule.run_pending()
     # time.sleep(1)

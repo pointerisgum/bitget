@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 20
+leverage = 10
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -772,6 +772,12 @@ else:
     # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
     #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
     tickers = ['BTCUSDT_UMCBL']
+    # tickers = ['SBTCSUSDT_SUMCBL']
+
+# tickers = []
+# result = marketApi.tickers('UMCBL')
+# for t in result['data']:
+#     tickers.append(t['symbol'])
 
 # for t in tickers:
 #     test(t)
@@ -793,6 +799,9 @@ shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 #                             executePrice=37905,
 #                             triggerType='fill_price',
 #                             presetStopLossPrice=36000)
+
+def getSizePer(t):
+    return 0.1
 
 def oneDay():
     time.sleep(1)
@@ -868,7 +877,8 @@ def oneDay():
         
         myAvailable = float(account['data'][0]['available'])
         # size = getSize(t, myAvailable, currentPrice)
-
+        myAvailable = 1000
+        
         longOrderId = longOrderIds[i]
         shortOrderId = shortOrderIds[i]
         buySize = buySizes[i]
@@ -891,37 +901,93 @@ def oneDay():
 
             longPrice = round(close + buffer, 0)
             shortPrice = round(close - buffer, 0)
-            size = 0.2
+            size = 0.1
             # longPrice = round(close + ((hight - low) * k), 0)
             # shortPrice = round(close - ((hight - low) * k), 0)
             ## longSL = round(longPrice-(currentPrice * slPer), 0)
             ## shortSL = round(shortPrice+(currentPrice * slPer), 0)
             # size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
+        # if currentPrice >= 10000:
+        #     # size = 0.2
+        #     # longPrice = round(close + ((hight - low) * k), 0)
+        #     # shortPrice = round(close - ((hight - low) * k), 0)
+        #     ## longSL = round(longPrice-(currentPrice * slPer), 0)
+        #     ## shortSL = round(shortPrice+(currentPrice * slPer), 0)
+
+        #     buffer = round((hight - low) * k, 0)
+        #     if buffer < close * 0.02:
+        #         buffer = close * 0.02
+        #     elif buffer > close * 0.04:
+        #         buffer = close * 0.04
+            
+        #     longPrice = round(close + buffer, 0)
+        #     shortPrice = round(close - buffer, 0)
+        #     size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 3)
         elif currentPrice >= 1000:
-            longPrice = round(close + ((hight - low) * k), 1)
-            shortPrice = round(close - ((hight - low) * k), 1)
+            # longPrice = round(close + ((hight - low) * k), 1)
+            # shortPrice = round(close - ((hight - low) * k), 1)
             # longSL = round(longPrice-(currentPrice * slPer), 1)
             # shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 2)
+            
+            buffer = round((hight - low) * k, 1)
+            if buffer < close * 0.02:
+                buffer = close * 0.02
+            elif buffer > close * 0.04:
+                buffer = close * 0.04
+
+            longPrice = round(close + buffer, 1)
+            shortPrice = round(close - buffer, 1)
+            size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 2)
         elif currentPrice >= 100:
-            longPrice = round(close + ((hight - low) * k), 1)
-            shortPrice = round(close - ((hight - low) * k), 1)
+            # longPrice = round(close + ((hight - low) * k), 1)
+            # shortPrice = round(close - ((hight - low) * k), 1)
             # longSL = round(longPrice-(currentPrice * slPer), 1)
             # shortSL = round(shortPrice+(currentPrice * slPer), 1)
-            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 1)
+            
+            buffer = round((hight - low) * k, 1)
+            if buffer < close * 0.02:
+                buffer = close * 0.02
+            elif buffer > close * 0.04:
+                buffer = close * 0.04
+                
+            longPrice = round(close + buffer, 1)
+            shortPrice = round(close - buffer, 1)
+            size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 1)
         elif currentPrice >= 10:
-            longPrice = round(close + ((hight - low) * k), 2)
-            shortPrice = round(close - ((hight - low) * k), 2)
+            # longPrice = round(close + ((hight - low) * k), 2)
+            # shortPrice = round(close - ((hight - low) * k), 2)
             # longSL = round(longPrice-(currentPrice * slPer), 2)
             # shortSL = round(shortPrice+(currentPrice * slPer), 2)
-            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
+            
+            buffer = round((hight - low) * k, 2)
+            if buffer < close * 0.02:
+                buffer = close * 0.02
+            elif buffer > close * 0.04:
+                buffer = close * 0.04
+                
+            longPrice = round(close + buffer, 2)
+            shortPrice = round(close - buffer, 2)
+            size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 0)
         else:
-            longPrice = round(close + ((hight - low) * k), 3)
-            shortPrice = round(close - ((hight - low) * k), 3)
+            # longPrice = round(close + ((hight - low) * k), 3)
+            # shortPrice = round(close - ((hight - low) * k), 3)
             # longSL = round(longPrice-(currentPrice * slPer), 3)
             # shortSL = round(shortPrice+(currentPrice * slPer), 3)
-            size = round(((myAvailable * sizePer) * leverage) / currentPrice, 0)
-
+            
+            buffer = round((hight - low) * k, 3)
+            if buffer < close * 0.02:
+                buffer = close * 0.02
+            elif buffer > close * 0.04:
+                buffer = close * 0.04
+                
+            longPrice = round(close + buffer, 3)
+            shortPrice = round(close - buffer, 3)
+            size = round(((myAvailable * getSizePer(t)) * leverage) / currentPrice, 0)
+            
+            
+            
+            
+            
         #이전에 걸어둔 예약 매수가 있다면 취소
         if longOrderId > 0:
             planApi.cancel_plan(t, coin, longOrderId, 'normal_plan')
@@ -964,6 +1030,8 @@ def oneDay():
         else:
             print(t, 'longResult none')
             # continue
+            
+        
         # else:
             #숏 예약
             # msg = t, 'add short', currentPrice
