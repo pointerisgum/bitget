@@ -432,12 +432,16 @@ def initTickers():
     global tickers
     global tickerDict
     
-    for d in tickerDict:
-        if bool(d.get('orderId')) == True:
-            if d['type'] == 'long':
-                orderApi.place_order(t, marginCoin=coin, size=d['size'], side='close_long', orderType='market', timeInForceValue='normal')
+    for i in range(len(tickers)):
+        key = tickers[i]
+        dic = tickerDict[key]
+        if bool(dic.get('orderId')) == True:
+            if dic['type'] == 'long':
+                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_long', orderType='market', timeInForceValue='normal')
+                print(t + 'long' + '시장가로 던짐')
             else:
-                orderApi.place_order(t, marginCoin=coin, size=d['size'], side='close_short', orderType='market', timeInForceValue='normal')        
+                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_short', orderType='market', timeInForceValue='normal')        
+                print(t + 'short' + '시장가로 던짐')
 
     tickers = []
     tickerDict = {}    
@@ -448,8 +452,10 @@ def initTickers():
     tickers.remove('BTCUSDT_UMCBL')
     tickers.remove('ETHUSDT_UMCBL')
     
-    # #오늘 이미 많이 올라서 임시로 뺄 애들
-    # tickers.remove('WAVESUSDT_UMCBL')
+    # tickers = ['GMTUSDT_UMCBL']
+    # tickerDict['GMTUSDT_UMCBL'] = {}
+    #오늘 이미 많이 올라서 임시로 뺄 애들
+    # tickers.remove('NEARUSDT_UMCBL')
     # tickers.remove('WAVESUSDT_UMCBL')
 
 # print(tickerDict['XRPUSDT_UMCBL'])
@@ -501,14 +507,13 @@ def getSize(t):
         size = round(((available * getSizePer()) * leverage) / price, 0)
     
     return size
-
-
+                   
             
 def check():
-    now = int(pydatetime.datetime.now().timestamp())
-    if now < 1649174400:
-        return
-    
+    # now = int(pydatetime.datetime.now().timestamp())
+    # if now < 1649347200:
+    #     return
+     
     global buySizes
     global longOrderIds
     global shortOrderIds
@@ -544,22 +549,38 @@ def check():
                 break
                 
         
+        buyPrice = -1
+        if bool(tickerDict[t].get('orderId')) == True:
+            result = orderApi.detail(t, orderId=tickerDict[t]['orderId'])
+            if result is not None:
+                if result.get('data', None).get('priceAvg', None) is None:
+                    buyPrice = -1
+                else:
+                    buyPrice = float(result['data']['priceAvg'])
+
+
+
+        closeStr = str(close).split('.')
+        digits = 1
+        if len(closeStr) == 2:
+                digits = len(closeStr[1])  #소수점 몇자리인지
+
         maxPer = 0.07 #몇퍼 이상 올랐을때 매수 할지에 대한 값
         minPer = 0.02 #고점 대비 얼마나 빠질때 팔지에 대한 값
         #구매하지 않은 경우
         if bool(tickerDict[t].get('orderId')) == False:
             #변동폭 체크
-            if close > open + (open * maxPer):
+            if close > round(open + (open * maxPer), digits) and hight < round(open + (open * (maxPer * 0.01)), digits):
                 size = getSize(t)
-                buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
                 tickerDict[t]['orderId'] = buyResult['data']['orderId']
                 tickerDict[t]['size'] = size
                 tickerDict[t]['type'] = 'long'
                 print('buy long : ', t, buyResult)
                 
-            elif close < open - (open * maxPer):
+            elif close < round(open - (open * maxPer), digits) and low > round(open - (open * (maxPer * 0.01)), digits):
                 size = getSize(t)
-                buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
+                buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
                 tickerDict[t]['orderId'] = buyResult['data']['orderId']
                 tickerDict[t]['size'] = size
                 tickerDict[t]['type'] = 'short'
@@ -575,33 +596,38 @@ def check():
             #     orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='market', timeInForceValue='normal')
             #     print('장이 끝났는데도 팔지 못한 경우 시장가 매도')
 
-            marketPrice = marketApi.market_price(t)
-            if marketPrice is None:
-                print('marketPrice is none')
-            currentPrice = float(marketPrice['data']['markPrice'])
-            
-            #롱 매수한 경우
-            if tickerDict[t]['type'] == 'long':
-                if currentPrice < hight - (hight * minPer):
-                    sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='market', timeInForceValue='normal')
-                    print('sell long : ', t, sellResult)
-            
-            #숏 매수한 경우
-            elif tickerDict[t]['type'] == 'short':
-                if currentPrice > low + (low * minPer):
-                    sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='market', timeInForceValue='normal')
-                    print('sell short : ', t, sellResult)
+            if buyPrice > 0:
+                # marketPrice = marketApi.market_price(t)
+                # if marketPrice is None:
+                #     print('marketPrice is none')
+                # currentPrice = float(marketPrice['data']['markPrice'])
+                
+                #롱 매수한 경우
+                if tickerDict[t]['type'] == 'long':
+                    if close < hight - (hight * minPer):
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                        print('sell long : ', t, sellResult)
+                
+                #숏 매수한 경우
+                elif tickerDict[t]['type'] == 'short':
+                    if close > low + (low * minPer):
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
+                        print('sell short : ', t, sellResult)
 
 
 
 
 
 
-# initTickers()
-# check()
+initTickers()
+check()
 schedule.every().day.at("01:00:01").do(lambda: initTickers())
 # schedule.every().day.at("01:03:00").do(lambda: check())
 checkSchedule = schedule.every(60).seconds.do(lambda: check())
+
+
+
+
 
 
 while True:
