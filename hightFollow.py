@@ -452,8 +452,8 @@ def initTickers():
     tickers.remove('BTCUSDT_UMCBL')
     tickers.remove('ETHUSDT_UMCBL')
     
-    # tickers = ['GMTUSDT_UMCBL']
-    # tickerDict['GMTUSDT_UMCBL'] = {}
+    tickers = ['SOLUSDT_UMCBL']
+    tickerDict['SOLUSDT_UMCBL'] = {}
     #오늘 이미 많이 올라서 임시로 뺄 애들
     # tickers.remove('NEARUSDT_UMCBL')
     # tickers.remove('WAVESUSDT_UMCBL')
@@ -567,10 +567,12 @@ def check():
 
         maxPer = 0.07 #몇퍼 이상 올랐을때 매수 할지에 대한 값
         minPer = 0.02 #고점 대비 얼마나 빠질때 팔지에 대한 값
+        limitPer = 0.08 #체크 한계선
+        
         #구매하지 않은 경우
         if bool(tickerDict[t].get('orderId')) == False:
             #변동폭 체크
-            if close > round(open + (open * maxPer), digits) and hight < round(open + (open * (maxPer * 0.01)), digits):
+            if close > round(open + (open * maxPer), digits) and hight < round(open + (open * (limitPer)), digits):
                 size = getSize(t)
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
                 tickerDict[t]['orderId'] = buyResult['data']['orderId']
@@ -578,7 +580,7 @@ def check():
                 tickerDict[t]['type'] = 'long'
                 print('buy long : ', t, buyResult)
                 
-            elif close < round(open - (open * maxPer), digits) and low > round(open - (open * (maxPer * 0.01)), digits):
+            elif close < round(open - (open * maxPer), digits) and low > round(open - (open * (limitPer)), digits):
                 size = getSize(t)
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
                 tickerDict[t]['orderId'] = buyResult['data']['orderId']
