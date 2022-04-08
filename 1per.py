@@ -496,7 +496,7 @@ def check():
         # print(t, datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'call')
         updateCross(t)
         cross = tickerDict[t]['cross']
-        
+    
         isMaxBuy = False
         orderCnt = 0
         for j in range(len(tickers)):
@@ -506,7 +506,10 @@ def check():
                     if orderCnt >= 3:
                         isMaxBuy = True
                         break
-            
+        
+
+
+
         #교차 : crossed
         #격리 : fixed
         accountApi.margin_mode(t, coin, 'crossed')
@@ -649,10 +652,9 @@ def check():
     time.sleep(0.01)  
 
 
-
-
-def updateCross(t):
-    candle_data = get_candle(t, 60, 100)
+def isNowCross(t, granularity):
+    candle_data = get_candle(t, granularity, 100)
+    time.sleep(0.01)
 
     for i in range(0, len(candle_data)):
         candle_data[i][0] = float(candle_data[i][0])
@@ -661,7 +663,30 @@ def updateCross(t):
         candle_data[i][3] = float(candle_data[i][3])
         candle_data[i][4] = float(candle_data[i][4])
 
+    df = pd.DataFrame(candle_data)
+    df=df[4].iloc[::1] #4번째가 종가임
+
+    ma10 = df.rolling(window=10).mean()
+    ma30 = df.rolling(window=30).mean()
+    if ma10.iloc[-1] > ma30.iloc[-1]:
+        return 'gold'
+    elif ma10.iloc[-1] < ma30.iloc[-1]:
+        return 'dead'
+
+
+def updateCross(t):
+    tickerDict[t]['cross'] = ''
     
+    candle_data = get_candle(t, 60, 100)
+    time.sleep(0.01)
+
+    for i in range(0, len(candle_data)):
+        candle_data[i][0] = float(candle_data[i][0])
+        candle_data[i][1] = float(candle_data[i][1])
+        candle_data[i][2] = float(candle_data[i][2])
+        candle_data[i][3] = float(candle_data[i][3])
+        candle_data[i][4] = float(candle_data[i][4])
+
     df = pd.DataFrame(candle_data)
     # df=df['trade_price'].iloc[::-1]
     df=df[4].iloc[::1] #4번째가 종가임
@@ -674,18 +699,21 @@ def updateCross(t):
     
     dead = line10>0 and line30<0
     gold = line10<0 and line30>0
-
+            
     if dead == True or gold == True:
         if dead == True:
             # print(t, '포지션 변경 데드크로스')
-            tickerDict[t]['cross'] = 'dead'
+            if isNowCross(t, 300) == 'dead':
+                tickerDict[t]['cross'] = 'dead'
+                # if isNowCross(t, 900) == 'dead':
+                #     tickerDict[t]['cross'] = 'dead'
         elif gold == True:
             # print(t, '포지션 변경 골든크로스')
-            tickerDict[t]['cross'] = 'gold'
-    else:
-        tickerDict[t]['cross'] = ''
+            if isNowCross(t, 300) == 'gold':
+                tickerDict[t]['cross'] = 'gold'
+                # if isNowCross(t, 900) == 'gold':
+                #     tickerDict[t]['cross'] = 'gold'
 
-    time.sleep(0.01)
 
 
 # initTickers()
@@ -702,4 +730,4 @@ initTickers()
 while True:
     check()
     schedule.run_pending()
-    time.sleep(1)
+    # time.sleep(1)
