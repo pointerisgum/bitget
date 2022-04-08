@@ -645,7 +645,8 @@ def check():
                             lossCnt = tickerDict[t]['lossCnt']
                             tickerDict[t]['lossCnt'] = lossCnt * 2
                             print('loss', t, 'lossCnt = ', tickerDict[t]['lossCnt'])
-      
+    
+    time.sleep(0.01)  
 
 
 
@@ -684,12 +685,13 @@ def updateCross(t):
     else:
         tickerDict[t]['cross'] = ''
 
+    time.sleep(0.01)
 
 
 # initTickers()
 # check()
-# # schedule.every().day.at("01:00:01").do(lambda: initTickers())
-# # schedule.every().day.at("01:03:00").do(lambda: check())
+# # # schedule.every().day.at("01:00:01").do(lambda: initTickers())
+# # # schedule.every().day.at("01:03:00").do(lambda: check())
 # checkSchedule = schedule.every(5).seconds.do(lambda: check())
 
 
@@ -700,4 +702,4 @@ initTickers()
 while True:
     check()
     schedule.run_pending()
-    # time.sleep(1)
+    time.sleep(1)
