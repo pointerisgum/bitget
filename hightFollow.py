@@ -452,8 +452,8 @@ def initTickers():
     tickers.remove('BTCUSDT_UMCBL')
     tickers.remove('ETHUSDT_UMCBL')
     
-    tickers = ['SOLUSDT_UMCBL']
-    tickerDict['SOLUSDT_UMCBL'] = {}
+    # tickers = ['SOLUSDT_UMCBL']
+    # tickerDict['SOLUSDT_UMCBL'] = {}
     #오늘 이미 많이 올라서 임시로 뺄 애들
     # tickers.remove('NEARUSDT_UMCBL')
     # tickers.remove('WAVESUSDT_UMCBL')
