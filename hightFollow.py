@@ -488,7 +488,7 @@ def getSizePer():
     return 0.5
 
 def getSize(t):
-    available = 100 #내가 투자 할 총 시드
+    available = 300 #내가 투자 할 총 시드
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -575,18 +575,24 @@ def check():
             if close > round(open + (open * maxPer), digits) and hight < round(open + (open * (limitPer)), digits):
                 size = getSize(t)
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
-                tickerDict[t]['orderId'] = buyResult['data']['orderId']
-                tickerDict[t]['size'] = size
-                tickerDict[t]['type'] = 'long'
-                print('buy long : ', t, buyResult)
+                if buyResult is None:
+                    print('buyResult is None')
+                else:
+                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                    tickerDict[t]['size'] = size
+                    tickerDict[t]['type'] = 'long'
+                    print('buy long : ', t, buyResult)
                 
             elif close < round(open - (open * maxPer), digits) and low > round(open - (open * (limitPer)), digits):
                 size = getSize(t)
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
-                tickerDict[t]['orderId'] = buyResult['data']['orderId']
-                tickerDict[t]['size'] = size
-                tickerDict[t]['type'] = 'short'
-                print('buy short : ', t, buyResult)
+                if buyResult is None:
+                    print('buyResult is None')
+                else:
+                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                    tickerDict[t]['size'] = size
+                    tickerDict[t]['type'] = 'short'
+                    print('buy short : ', t, buyResult)
 
         #구매한 경우
         else:
