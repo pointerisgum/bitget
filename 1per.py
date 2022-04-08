@@ -420,12 +420,12 @@ def initTickers():
     result = marketApi.tickers('UMCBL')
     for t in result['data']:
         tickers.append(t['symbol'])
-        tickerDict[t['symbol']] = {'lossCnt':1, 'targetPer':0.011, 'cross':''}
+        tickerDict[t['symbol']] = {'lossCnt':1, 'targetPer':0.015, 'cross':''}
     tickers.remove('BTCUSDT_UMCBL')
 
     
     # tickers = ['GMTUSDT_UMCBL']
-    # tickerDict['GMTUSDT_UMCBL'] = {'lossCnt':1, 'targetPer':0.011, 'cross':''}
+    # tickerDict['GMTUSDT_UMCBL'] = {'lossCnt':1, 'targetPer':0.02, 'cross':''}
     #오늘 이미 많이 올라서 임시로 뺄 애들
     # tickers.remove('NEARUSDT_UMCBL')
     # tickers.remove('WAVESUSDT_UMCBL')
@@ -503,7 +503,7 @@ def check():
             if bool(tickerDict[tickers[j]].get('orderId')) == True:
                 if int(tickerDict[tickers[j]]['orderId']) > 0:
                     orderCnt+=1
-                    if orderCnt >= 3:
+                    if orderCnt >= 10:
                         isMaxBuy = True
                         break
         
@@ -610,7 +610,7 @@ def check():
                 targetPer = tickerDict[t]['targetPer']
                 if tickerDict[t]['type'] == 'long':
                     if close > round(buyPrice + (buyPrice * targetPer), digits):   #1% 먹었을때 매도
-                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.003), digits), timeInForceValue='normal')
                         if sellResult is None:
                             print('sellResult is None')
                         else:
@@ -619,7 +619,7 @@ def check():
                             tickerDict[t]['lossCnt'] = 1
                             print('win', t)
                     elif close < round(buyPrice - (buyPrice * targetPer), digits): #1% 읽었을때 매도
-                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_long', orderType='limit', price=round(close+(close*0.003), digits), timeInForceValue='normal')
                         if sellResult is None:
                             print('sellResult is None')
                         else:
@@ -630,7 +630,7 @@ def check():
                             print('loss', t, 'lossCnt = ', tickerDict[t]['lossCnt'])
                 elif tickerDict[t]['type'] == 'short':
                     if close < round(buyPrice - (buyPrice * targetPer), digits):   #1% 먹었을때 매도
-                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.003), digits), timeInForceValue='normal')
                         if sellResult is None:
                             print('sellResult is None')
                         else:
@@ -639,7 +639,7 @@ def check():
                             tickerDict[t]['lossCnt'] = 1
                             print('win', t)
                     elif close > round(buyPrice + (buyPrice * targetPer), digits): #1% 읽었을때 매도
-                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
+                        sellResult = orderApi.place_order(t, coin, size=tickerDict[t]['size'], side='close_short', orderType='limit', price=round(close-(close*0.003), digits), timeInForceValue='normal')
                         if sellResult is None:
                             print('sellResult is None')
                         else:
