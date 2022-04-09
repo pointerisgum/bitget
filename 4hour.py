@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 10
+leverage = 20
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -901,7 +901,7 @@ def oneDay():
 
             longPrice = round(close + buffer, 0)
             shortPrice = round(close - buffer, 0)
-            size = 0.1
+            size = 0.2
             # longPrice = round(close + ((hight - low) * k), 0)
             # shortPrice = round(close - ((hight - low) * k), 0)
             ## longSL = round(longPrice-(currentPrice * slPer), 0)
