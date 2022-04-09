@@ -513,7 +513,9 @@ def check():
     # now = int(pydatetime.datetime.now().timestamp())
     # if now < 1649347200:
     #     return
-     
+    
+    time.sleep(0.01)
+    
     global buySizes
     global longOrderIds
     global shortOrderIds
