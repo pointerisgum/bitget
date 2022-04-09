@@ -487,25 +487,21 @@ shortOrderIds = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
 def getSizePer():
     return 0.5
 
+def getDigits(price):
+    closeStr = str(price).split('.')
+    digits = 1
+    if len(closeStr) == 2:
+            digits = len(closeStr[1])  #소수점 몇자리인지
+    return digits
+
 def getSize(t):
-    available = 200 #내가 투자 할 총 시드
+    available = 100 #내가 투자 할 총 시드
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
         print('marketPrice is none')
     price = float(marketPrice['data']['markPrice'])
-    
-    if price >= 10000:
-        size = round(((available * getSizePer()) * leverage) / price, 3)
-    elif price >= 1000:
-        size = round(((available * getSizePer()) * leverage) / price, 2)
-    elif price >= 100:
-        size = round(((available * getSizePer()) * leverage) / price, 1)
-    elif price >= 10:
-        size = round(((available * getSizePer()) * leverage) / price, 0)
-    else:
-        size = round(((available * getSizePer()) * leverage) / price, 0)
-    
+    size = round(((available * getSizePer()) * leverage) / price, getDigits(price))
     return size
                    
             
