@@ -437,11 +437,13 @@ def initTickers():
         dic = tickerDict[key]
         if bool(dic.get('orderId')) == True:
             if dic['type'] == 'long':
-                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_long', orderType='market', timeInForceValue='normal')
                 print(t + 'long' + '시장가로 던짐')
+                print('size : ', dic['size'])
+                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_long', orderType='market', timeInForceValue='normal')
             else:
-                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_short', orderType='market', timeInForceValue='normal')        
                 print(t + 'short' + '시장가로 던짐')
+                print('size : ', dic['size'])
+                orderApi.place_order(t, marginCoin=coin, size=dic['size'], side='close_short', orderType='market', timeInForceValue='normal')        
 
     tickers = []
     tickerDict = {}    
@@ -627,9 +629,9 @@ def check():
 
 initTickers()
 check()
-schedule.every().day.at("01:00:01").do(lambda: initTickers())
+# schedule.every().day.at("01:00:01").do(lambda: initTickers())
 # schedule.every().day.at("01:03:00").do(lambda: check())
-checkSchedule = schedule.every(60).seconds.do(lambda: check())
+checkSchedule = schedule.every(10).seconds.do(lambda: check())
 
 
 
