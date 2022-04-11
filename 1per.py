@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'SUSDT'
-leverage = 1
+leverage = 10
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -424,7 +424,7 @@ def initTickers():
     for t in result['data']:
         symbol = t['symbol']
         tickers.append(symbol)
-        tickerDict[symbol] = {'lossCnt':1, 'targetPer':0.015, 'cross':''}
+        tickerDict[symbol] = {'lossCnt':1, 'targetPer':0.07, 'cross':''}
         
         accountApi.margin_mode(symbol, coin, 'crossed')
         accountApi.leverage(symbol, coin, leverage, 'long')
