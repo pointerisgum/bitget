@@ -36,7 +36,7 @@ ETH_Ticker = 'SETHSUSDT_SUMCBL'
 EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
-coin = 'USDT'
+coin = 'SUSDT'
 leverage = 1
 check_cci = 95
 excuteMargin = 0.004
@@ -445,12 +445,12 @@ def initTickers():
 
     tickers = []
     tickerDict = {}    
-    result = marketApi.tickers('UMCBL')
+    result = marketApi.tickers('SUMCBL')
     for t in result['data']:
         tickers.append(t['symbol'])
         tickerDict[t['symbol']] = {}
-    tickers.remove('BTCUSDT_UMCBL')
-    tickers.remove('ETHUSDT_UMCBL')
+    # tickers.remove('BTCUSDT_UMCBL')
+    # tickers.remove('ETHUSDT_UMCBL')
     
     # tickers = ['SOLUSDT_UMCBL']
     # tickerDict['SOLUSDT_UMCBL'] = {}

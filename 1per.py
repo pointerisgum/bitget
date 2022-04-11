@@ -36,7 +36,7 @@ ETH_Ticker = 'SETHSUSDT_SUMCBL'
 EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
-coin = 'USDT'
+coin = 'SUSDT'
 leverage = 1
 check_cci = 95
 excuteMargin = 0.004
@@ -404,6 +404,9 @@ def initTickers():
     global tickers
     global tickerDict
     
+    #교차 : crossed
+    #격리 : fixed
+
     # for i in range(len(tickers)):
     #     key = tickers[i]
     #     dic = tickerDict[key]
@@ -417,13 +420,22 @@ def initTickers():
 
     tickers = []
     tickerDict = {}    
-    result = marketApi.tickers('UMCBL')
+    result = marketApi.tickers('SUMCBL')
     for t in result['data']:
-        tickers.append(t['symbol'])
-        tickerDict[t['symbol']] = {'lossCnt':1, 'targetPer':0.015, 'cross':''}
-    tickers.remove('BTCUSDT_UMCBL')
+        symbol = t['symbol']
+        tickers.append(symbol)
+        tickerDict[symbol] = {'lossCnt':1, 'targetPer':0.015, 'cross':''}
+        
+        accountApi.margin_mode(symbol, coin, 'crossed')
+        accountApi.leverage(symbol, coin, leverage, 'long')
+        accountApi.leverage(symbol, coin, leverage, 'short')
 
-    
+        time.sleep(0.1)
+        
+    # tickers.remove('BTCUSDT_UMCBL')
+    # tickers.remove('SBTCSUSDT_SUMCBL')
+    # tickers.remove('SETHSUSDT_SUMCBL')
+
     # tickers = ['GMTUSDT_UMCBL']
     # tickerDict['GMTUSDT_UMCBL'] = {'lossCnt':1, 'targetPer':0.02, 'cross':''}
     #오늘 이미 많이 올라서 임시로 뺄 애들
@@ -467,16 +479,23 @@ def getSize(t):
         print('marketPrice is none')
     price = float(marketPrice['data']['markPrice'])
     
-    if price >= 10000:
-        size = round(((available * getSizePer()) * leverage) / price, 3)
-    elif price >= 1000:
-        size = round(((available * getSizePer()) * leverage) / price, 2)
-    elif price >= 100:
-        size = round(((available * getSizePer()) * leverage) / price, 1)
-    elif price >= 10:
-        size = round(((available * getSizePer()) * leverage) / price, 0)
-    else:
-        size = round(((available * getSizePer()) * leverage) / price, 0)
+    closeStr = str(price).split('.')
+    digits = 1
+    if len(closeStr) == 2:
+        digits = len(closeStr[1])  #소수점 몇자리인지
+
+    size = round(((available * getSizePer()) * leverage) / price, digits)
+
+    # if price >= 10000:
+    #     size = round(((available * getSizePer()) * leverage) / price, 3)
+    # elif price >= 1000:
+    #     size = round(((available * getSizePer()) * leverage) / price, 2)
+    # elif price >= 100:
+    #     size = round(((available * getSizePer()) * leverage) / price, 1)
+    # elif price >= 10:
+    #     size = round(((available * getSizePer()) * leverage) / price, 0)
+    # else:
+    #     size = round(((available * getSizePer()) * leverage) / price, 0)
     
     return size
                    
@@ -489,7 +508,7 @@ def check():
     global buySizes
     global longOrderIds
     global shortOrderIds
-    # print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'check')
+    print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), 'check')
     
     for i in range(len(tickers)):
         t = tickers[i]
@@ -503,19 +522,11 @@ def check():
             if bool(tickerDict[tickers[j]].get('orderId')) == True:
                 if int(tickerDict[tickers[j]]['orderId']) > 0:
                     orderCnt+=1
-                    if orderCnt >= 10:
+                    if orderCnt >= 3:
                         isMaxBuy = True
                         break
         
-
-
-
-        #교차 : crossed
-        #격리 : fixed
-        accountApi.margin_mode(t, coin, 'crossed')
-        accountApi.leverage(t, coin, leverage, 'long')
-        accountApi.leverage(t, coin, leverage, 'short')
-
+        
         open = 0
         hight = 0
         low = 0
@@ -552,6 +563,7 @@ def check():
             if result is not None:
                 if result.get('data', None).get('state', None) is not None:
                     if result['data']['state'] == 'filled':
+                        print('loss count : ', tickerDict[t]['lossCnt'])
                         del tickerDict[t]['sellOrderId']
     
     
@@ -588,6 +600,8 @@ def check():
                     print('buyResult is None', 'size : ', size, 'price : ', close)
                 else:
                     tickerDict[t]['type'] = 'long'
+                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                    tickerDict[t]['size'] = size
                     print(t, 'buy long : ', buyResult)
             else:
                 # buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
@@ -596,13 +610,9 @@ def check():
                     print('buyResult is None', 'size : ', size, 'price : ', close)
                 else:
                     tickerDict[t]['type'] = 'short'
+                    tickerDict[t]['orderId'] = buyResult['data']['orderId']
+                    tickerDict[t]['size'] = size
                     print(t, 'buy short : ', buyResult)
-
-            if buyResult is None:
-                print('buyResult is None')
-            else:
-                tickerDict[t]['orderId'] = buyResult['data']['orderId']
-                tickerDict[t]['size'] = size
 
         #구매한 경우
         else:
@@ -649,14 +659,15 @@ def check():
                             tickerDict[t]['lossCnt'] = lossCnt * 2
                             print('loss', t, 'lossCnt = ', tickerDict[t]['lossCnt'])
     
-    time.sleep(0.01)  
+    time.sleep(0.1)  
 
 
 def isNowCross(t, granularity):
-    time.sleep(0.01)
+    time.sleep(0.1)
 
     candle_data = get_candle(t, granularity, 100)
     if candle_data is None:
+        print('candle_data None')
         return ''
 
     for i in range(0, len(candle_data)):
@@ -678,12 +689,13 @@ def isNowCross(t, granularity):
 
 
 def updateCross(t):
-    time.sleep(0.01)
+    time.sleep(0.1)
 
     tickerDict[t]['cross'] = ''
     
     candle_data = get_candle(t, 60, 100)
     if candle_data is None:
+        print('candle_data None')
         return
     
     for i in range(0, len(candle_data)):
@@ -733,6 +745,7 @@ def updateCross(t):
 
 
 initTickers()
+
 while True:
     check()
     schedule.run_pending()
