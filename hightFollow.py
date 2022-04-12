@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'SUSDT'
-leverage = 1
+leverage = 10
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
