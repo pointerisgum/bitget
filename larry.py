@@ -6,7 +6,7 @@ import sys
 import logging
 # from tkinter.messagebox import NO
 import traceback
-##
+###
 # from matplotlib.pyplot import hist
 import upbit_api
 import pyupbit
