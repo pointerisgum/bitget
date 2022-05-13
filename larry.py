@@ -7,7 +7,7 @@ import logging
 # from tkinter.messagebox import NO
 import traceback
 ##
-from matplotlib.pyplot import hist
+# from matplotlib.pyplot import hist
 import upbit_api
 import pyupbit
 import telegram
