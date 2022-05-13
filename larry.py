@@ -933,6 +933,7 @@ oneDayJob = schedule.every(60).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
 # initTickers()
 schedule.every().day.at("01:00:01").do(lambda: initTickers())
+#
 
 # initTickers()
 # schedule.every().hour.at(":00").do(lambda: initTickers())
