@@ -266,7 +266,9 @@ class Request:
         except urllib3.exceptions.HTTPError as error:
             # HTTPError must come last as its the base urllib3 exception class
             # TODO: do something smart here; for now just raise NetworkError
-            raise NetworkError(f'urllib3 HTTPError {error}') from error
+            # raise NetworkError(f'urllib3 HTTPError {error}') from error
+            #여기서 가끔 죽어서 우선 주석처리 함
+            print('urllib3 HTTPError')
 
         if 200 <= resp.status <= 299:
             # 200-299 range are HTTP success statuses
@@ -293,7 +295,8 @@ class Request:
         if resp.status == 502:
             # raise NetworkError('Bad Gateway')
             print('raise NetworkError(Bad Gateway)')
-        raise NetworkError(f'{message} ({resp.status})')
+        #여기서 자꾸 뒤짐
+        # raise NetworkError(f'{message} ({resp.status})')
 
     def post(self, url: str, data: JSONDict, timeout: float = None) -> Union[JSONDict, bool]:
         """Request an URL.

@@ -46,9 +46,14 @@ class Client(object):
         # send request
         response = None
         if method == c.GET:
-            response = requests.get(url, headers=header)
+            try:
+                response = requests.get(url, headers=header)
+            except ValueError:
+                print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api return none!!!')
+                return None
+            # response = requests.get(url, headers=header)
             if response is None:
-                print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api return none!!!')
+                print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api return none!!!')
                 return None
             # print("response : ",response.text)
         elif method == c.POST:
@@ -62,7 +67,7 @@ class Client(object):
         # exception handle
         if not str(response.status_code).startswith('2'):
             # raise exceptions.BitgetAPIException(response)
-            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), '!!!api error!!!')  #여기
+            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api error!!!', response)  #여기
             return None
         try:
             res_header = response.headers

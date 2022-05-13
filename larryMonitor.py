@@ -65,6 +65,16 @@ accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_tim
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 
+
+account = accountApi.accounts('umcbl')
+if account is not None:
+    myAvailable = float(account['data'][0]['available'])
+    equity = float(account['data'][0]['equity'])
+    print(myAvailable)
+    print(equity)
+    print()
+
+
 tickers = []
 result = marketApi.tickers('UMCBL')
 for t in result['data']:

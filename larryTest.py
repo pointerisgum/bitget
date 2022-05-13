@@ -1,3 +1,4 @@
+from cgitb import reset
 from pickle import FALSE, TRUE
 from re import I
 import time
@@ -40,7 +41,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 1
+leverage = 2
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -81,7 +82,7 @@ size = round(((myAvailable * sizePer) * leverage) / currentPrice, 3)
 print(size)
 
 
-bot.sendMessage(chat_id=chatId, text='test msg')
+# bot.sendMessage(chat_id=chatId, text='test msg')
 
 
 import pandas as pd
@@ -311,35 +312,68 @@ total = 0.0
 orgTotalPer = 0.0
 
 
-    
-def test(ticker, candle_data):
+isLogOk = False
+
+def test(ticker):
     #          1   5    15   30    1H    4H     12H    1D      1W
     # period: 60, 300, 900, 1800, 3600, 14400, 43200, 86400, 604800
     global total
     global orgTotalPer
+    global isLogOk
     
+    granularity = 86400
     k = 0.5
-    # leverage = 1
+    leverage = 20
     fee = 0.1
-    # candle_data = get_candle(ticker, 86400, 100)
     longTotalPer = 0.0
     shortTotalPer = 0.0
     totalPer = 0.0
+
+    # s = '2022-03-28 01:00:00' #+1의 결과 0309인 경우 0310의 결과를 가져옴
+    # ts = int(time.mktime(datetime.datetime.strptime(s, '%Y-%m-%d %H:%M:%S').timetuple()))
+    # start = ts*1000
+    # end = (ts*1000)+(granularity*1000*100)
+    # candle_data = marketApi.candles(ticker, granularity=granularity, startTime=start, endTime=end)
+    
+    # for i in range(0, 2):
+    #     #100일치 추가
+    #     start -= granularity*1000*100
+    #     end -= granularity*1000*100
+    #     tmp = marketApi.candles(ticker, granularity=granularity, startTime=start, endTime=end)
+    #     candle_data = tmp + candle_data
+    #     time.sleep(0.01)
+    
+
+    # for i in range(0, len(candle_data)):
+    #     ttt = datetime.datetime.fromtimestamp((int(candle_data[i][0]) + granularity*1000)/1000).strftime('%Y-%m-%d %H:%M:%S')
+    #     print(ttt)
+    
+    candle_data = get_candle(ticker, granularity, 2)
+
+    if len(candle_data) <= 0:
+        return
+    
+    if isLogOk == False:
+        startDate = datetime.datetime.fromtimestamp((int(candle_data[0][0]) + granularity*1000)/1000).strftime('%Y-%m-%d %H:%M:%S')
+        print('start : ', startDate)
+        endDate = datetime.datetime.fromtimestamp((int(candle_data[-1][0]) - (granularity*1000))/1000).strftime('%Y-%m-%d %H:%M:%S')
+        print('end : ', endDate)
+        isLogOk = True
     
     if len(candle_data) > 0:
         orgStart = float(candle_data[0][4])
         orgEnd = float(candle_data[-1][4])
-        orgPer = (((((orgEnd / orgStart) * 100) - 100)) * leverage)
-        print('keep per : ', round(orgPer, 1))
+        orgPer = ((((orgEnd / orgStart) * 100) - 100))
+        # print('keep per : ', round(orgPer, 1))
         orgTotalPer += orgPer
 
     for i in range(1, len(candle_data)-1):
-        #전날 어떻게 끝났는지 알아온다
         open = float(candle_data[i][1]) #시가
         hight = float(candle_data[i][2]) #고가
         low = float(candle_data[i][3]) #저가
         close = float(candle_data[i][4]) #종가
 
+        #전날 어떻게 끝났는지 알아온다
         beforeOpen = float(candle_data[i-1][1]) #전날 시가
         beforeHight = float(candle_data[i-1][2]) #전날 고가
         beforeLow = float(candle_data[i-1][3]) #전날 저가
@@ -351,7 +385,16 @@ def test(ticker, candle_data):
         isShort = False
         # if beforeOpen < beforeClose:
         #     #롱
-        longPrice = beforeClose + ((beforeHight - beforeLow) * k)
+        
+        buffer = ((beforeHight - beforeLow) * k)
+        if buffer < beforeClose * 0.02:
+            buffer = beforeClose * 0.02
+        elif buffer > beforeClose * 0.04:
+            buffer = beforeClose * 0.04
+        
+        # buffer = beforeClose * 0.09
+        longPrice = beforeClose + buffer
+        # longPrice = beforeClose + (beforeClose * 0.02)
         if hight > longPrice:
             #롱 매수
             per = ((((close / longPrice) * 100) - 100) * leverage) - (fee * leverage)
@@ -367,7 +410,9 @@ def test(ticker, candle_data):
 
         # if beforeOpen > beforeClose:
         # #숏
-        shortPrice = beforeClose - ((beforeHight - beforeLow) * k)
+        # shortPrice = beforeClose - ((beforeHight - beforeLow) * k)
+        # shortPrice = beforeClose - (beforeClose * 0.02)
+        shortPrice = beforeClose - buffer
         if low < shortPrice:
             #숏 매수
             per = (((((close / shortPrice) * 100) - 100) * -1) * leverage) - (fee * leverage)
@@ -442,12 +487,10 @@ def test(ticker, candle_data):
     #             # else:
     #                 # print('숏 매수하지 않음')
 
-    print(ticker, 'longTotalPer : ', round(longTotalPer, 2))
-    print(ticker, 'shortTotalPer : ', round(shortTotalPer, 2))
+    # print(ticker, 'longTotalPer : ', round(longTotalPer, 2))
+    # print(ticker, 'shortTotalPer : ', round(shortTotalPer, 2))
     total += totalPer
     print(ticker, round(totalPer, 2), '%')
-    # print('keep total per : ', round(orgTotalPer, 1))
-    print()
 
 
 # #지정가 리스트 긁어오기
@@ -494,7 +537,6 @@ def test(ticker, candle_data):
 
 
 
-
 if coin == 'SUSDT':
     tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
 else:
@@ -508,26 +550,45 @@ else:
            'ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL',
            'LRCUSDT_UMCBL']
 
+    tickers = ['BTCUSDT_UMCBL']
+    # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
+    #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
+    # tickers = ['ENJUSDT_UMCBL']
+    # tickers = ['BTCUSDT_UMCBL', 
+    #            'ETHUSDT_UMCBL',
+    #            'XRPUSDT_UMCBL','ADAUSDT_UMCBL', 'DOTUSDT_UMCBL', 'SANDUSDT_UMCBL', 'MANAUSDT_UMCBL']
 
-endTime = int(pydatetime.datetime.now().timestamp()) * 1000
-startTime = endTime - ((86400*1000)*2) #2부터 해야 전날 데이터를 가져옴
-candleTotalData = get_candle_time(86400, startTime, endTime)
-for i in range(1, 1):
-    tempData = get_candle_time(86400, startTime - (((86400*1000)*100) * i), endTime - (((86400*1000)*100) * i))
-    t = tempData + candleTotalData
-    candleTotalData = t
-    # candleTotalData += tempData
-    time.sleep(0.05)
 
-tmpTime = float(candleTotalData[0][0]) / 1000
-dt = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tmpTime))
-print(dt)
+# tickers = []
+# result = marketApi.tickers('UMCBL')
+# for t in result['data']:
+#     tickers.append(t['symbol'])
+# tickers.remove('BTCUSDT_UMCBL')
+# tickers.remove('ETHUSDT_UMCBL')
+
+# tickers = ['BTCUSDT_UMCBL']
+# endTime = int(pydatetime.datetime.now().timestamp()) * 1000
+# startTime = endTime - ((86400*1000)*2) #2부터 해야 전날 데이터를 가져옴
+# candleTotalData = get_candle_time(86400, startTime, endTime)
+# for i in range(1, 1):
+# # for i in range(1, len(candleTotalData)):
+#     tempData = get_candle_time(86400, startTime - (((86400*1000)*100) * i), endTime - (((86400*1000)*100) * i))
+#     t = tempData + candleTotalData
+#     candleTotalData = t
+#     # candleTotalData += tempData
+#     time.sleep(0.05)
+
+# tmpTime = float(candleTotalData[0][0]) / 1000
+# dt = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(tmpTime))
+# print(dt)
 
 for t in tickers:
-    test(t, candleTotalData)
+    # test(t, candleTotalData)
+    test(t)
     # time.sleep(0.05)
 
-print('total :', round(total, 2), '%')
+print('존버 : ', int(round(orgTotalPer, 0)), '%')
+print('토탈', int(round(total, 0)), '%')
 print()
 
 

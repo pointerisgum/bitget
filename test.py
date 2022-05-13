@@ -4,7 +4,7 @@ import time
 import os
 import sys
 import logging
-# from tkinter.messagebox import NO
+from tkinter.messagebox import NO
 import traceback
 
 from matplotlib.pyplot import hist
@@ -29,21 +29,21 @@ import time
 access = "xwdEMciw0PeGRfpA8xMaVtnVGmFPFxTR6dkKCnUQ"
 secret = "UOxwdGYVZflyTCbMwrlrzB0Ey44GGxSLl70xp8A4"
 slackToken = "xoxb-2958422443234-2961015128436-OlEZV7qGyaamz31X3slydehR"
-teleToken = "5144034355:AAGsuZQrk9oDIEa2PqzUuQQObXvFrCs3h10"
-chatId = "-682086795"
+teleToken = "5348167127:AAEYeg4sAo91RjvoTRGCevNdb5MrWDPJ5pc"
+chatId = "5046654369"
 
 
 # #승훈이형꺼
-api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
-secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
-passphrase = "lsh790308"
-myAvailable = 1000
+# api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
+# secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
+# passphrase = "lsh790308"
+# myAvailable = 1000
 
 #내꺼
-# api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
-# secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
-# passphrase = "larryapi1"
-# myAvailable = 400
+api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
+secret_key = "9cb1d21914debdda86deeb202af7b146954c28b85c80bdd22dc9850116b4810a"
+passphrase = "larryapi1"
+myAvailable = 400
 
 # BTC_Ticker = 'SBTCSUSDT_SUMCBL'
 # ETH_Ticker = 'SETHSUSDT_SUMCBL'
@@ -75,10 +75,10 @@ positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_t
 
 contracts = marketApi.contracts('umcbl')
 
-
 #교차 : crossed
 #격리 : fixed
 
+##!!!!!!!!!봇 생성 후 t.me/BotName_bot 링크를 눌러서 방을 만든 후 start를 해야 함!!!!!!!!!
 # chat = telegram.Bot(token = teleToken)
 # updates = chat.getUpdates()
 # for u in updates:
@@ -264,10 +264,10 @@ def get_candle(ticker, time, count):
 
 
 
+# k_long = 0.3
+# k_short = 0.7
 k_long = 0.5
 k_short = 0.5
-# k_long = 0.2
-# k_short = 0.2
 
 if coin == 'SUSDT':
     tickers = ['SBTCSUSDT_SUMCBL', 'SETHSUSDT_SUMCBL', 'SEOSSUSDT_SUMCBL']
@@ -281,16 +281,21 @@ else:
     #            'MANAUSDT_UMCBL', 'SANDUSDT_UMCBL', 'CRVUSDT_UMCBL','ARUSDT_UMCBL', 'PEOPLEUSDT_UMCBL', 'LRCUSDT_UMCBL']
     # tickers = ['BTCUSDT_UMCBL', 'ETHUSDT_UMCBL', 'XRPUSDT_UMCBL', 'EOSUSDT_UMCBL', 'BCHUSDT_UMCBL', 'LTCUSDT_UMCBL', 'ADAUSDT_UMCBL', 'ETCUSDT_UMCBL', 'LINKUSDT_UMCBL', 'TRXUSDT_UMCBL',
     #            'DOTUSDT_UMCBL', 'DOGEUSDT_UMCBL','BNBUSDT_UMCBL', 'UNIUSDT_UMCBL', 'ICPUSDT_UMCBL', 'FILUSDT_UMCBL', 'XLMUSDT_UMCBL','AVAXUSDT_UMCBL', 'DASHUSDT_UMCBL', 'XEMUSDT_UMCBL']
-    # tickers = ['BTCUSDT_UMCBL', 
-    #            'ETHUSDT_UMCBL',
-    #            'XRPUSDT_UMCBL','ADAUSDT_UMCBL', 'DOTUSDT_UMCBL', 'SANDUSDT_UMCBL', 'MANAUSDT_UMCBL', 
-    #            'LINKUSDT_UMCBL', 'NEOUSDT_UMCBL', 'MATICUSDT_UMCBL', 'SOLUSDT_UMCBL', 'UNIUSDT_UMCBL',
-    #            'FILUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'NEARUSDT_UMCBL', 'ALICEUSDT_UMCBL',
-    #            'WAVESUSDT_UMCBL', 'DOGEUSDT_UMCBL']
+    tickers = ['ETHUSDT_UMCBL',
+               'XRPUSDT_UMCBL','ADAUSDT_UMCBL', 'DOTUSDT_UMCBL', 'SANDUSDT_UMCBL', 'MANAUSDT_UMCBL', 
+               'LINKUSDT_UMCBL', 'NEOUSDT_UMCBL', 'MATICUSDT_UMCBL', 'SOLUSDT_UMCBL', 'UNIUSDT_UMCBL',
+               'FILUSDT_UMCBL', 'LUNAUSDT_UMCBL', 'NEARUSDT_UMCBL', 'ALICEUSDT_UMCBL',
+               'WAVESUSDT_UMCBL', 'DOGEUSDT_UMCBL']
     # tickers = ['SOLUSDT_UMCBL', 'LUNAUSDT_UMCBL']
     tickers = ['BTCUSDT_UMCBL']
+    
+# tickers = []
+# result = marketApi.tickers('UMCBL')
+# for t in result['data']:
+#     tickers.append(t['symbol'])
 
-        
+# tickers.remove('BTCUSDT_UMCBL')
+
 tickerDict = {}
 highRun = []
 
@@ -368,9 +373,11 @@ def setEndStep(t, price):
     
 
 def getSize(t):
-    available = 500 #내가 투자 할 총 시드
-    # buyAvailable = (available / 2) * (1/len(tickers))
-    buyAvailable = available * (1/len(tickers))
+    if t == 'BTCUSDT_UMCBL':
+        return 0.1
+    
+    available = 1000 #내가 투자 할 총 시드
+    buyAvailable = (available / 2) * (1/len(tickers))
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -426,9 +433,28 @@ def removeLastNum(price):
 def getTime():
     return datetime.now().strftime("%Y/%m/%d, %H:%M:%S")
 
+def limitOrderCancelIfNotBuy(t):
+    limitList = orderApi.current(t)
+    cancelOrders = []
+    if limitList is not None:
+        for i in range(0, len(limitList['data'])):
+            data = limitList['data'][i]
+            if data['state'] == 'new' and (data['side'] == 'open_long' or data['side'] == 'open_short'):
+                now = int(pydatetime.datetime.now().timestamp()) * 1000
+                if (now - (3600 * 1000)) > int(data['cTime']):
+                    #지정가 걸어두고 한시간동안 안사진 경우 취소
+                    orderId = data['orderId']
+                    cancelOrders.append(orderId)
+                    time.sleep(1)
+        
+        if len(cancelOrders) > 0:
+            result = orderApi.cancel_batch_orders(t, coin, cancelOrders)
+            print(result)
+            print(t, '지정가로 걸어두었지만 1시간동안 안사져서 취소 됨')
+
 
 def initTickers():
-    # bot.sendMessage(chat_id=chatId, text='프로그램 초기화')
+    bot.sendMessage(chat_id=chatId, text='프로그램 초기화')
     print('initTickers()')
 
     global oneDayJob
@@ -495,7 +521,7 @@ def initTickers():
         tickerDict[t]['short'] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(60).seconds.do(lambda: oneDay())
 
 
 def getNowStatus(t):
@@ -514,19 +540,17 @@ def getNowStatus(t):
 
 def limitOrderCancel(t):
     limitList = orderApi.current(t)
-    if limitList is not None:
-        cancelOrders = []
-        for i in range(0, len(limitList['data'])):
-            data = limitList['data'][i]
-            if data['state'] == 'new':
-                orderId = data['orderId']
-                cancelOrders.append(orderId)
-        
-        #등록된 지정가가 있으면 cancel
-        if len(cancelOrders) > 0:
-            orderApi.cancel_batch_orders(t, coin, cancelOrders)
-            print(t, '초기화로 인한 지정가 대기 취소')
-
+    cancelOrders = []
+    for i in range(0, len(limitList['data'])):
+        data = limitList['data'][i]
+        if data['state'] == 'new':
+            orderId = data['orderId']
+            cancelOrders.append(orderId)
+    
+    #등록된 지정가가 있으면 cancel
+    if len(cancelOrders) > 0:
+        orderApi.cancel_batch_orders(t, coin, cancelOrders)
+        print(t, '초기화로 인한 지정가 대기 취소')
 
 def oneDay():
     for t in tickers:
@@ -573,52 +597,6 @@ def oneDay():
             else:
                 time.sleep(1)
 
-    
-        # buyResult = orderApi.place_order(t, coin, size=getSize(t), side='open_long', orderType='limit', price=candle_data[-1][4], timeInForceValue='normal')
-        # detailResult = orderApi.detail(t, buyResult['data']['orderId'])
-        # print(detailResult)
-        # 900575225571864579
-#         if isOrder == False:
-#             print(candle_data[-1][4])
-#             buyResult = planApi.place_plan(t, marginCoin=coin, size=getSize(t), side='open_long', orderType='limit',
-#                                         triggerPrice=candle_data[-1][4],
-#                                         executePrice=candle_data[-1][4],
-#                                         triggerType='fill_price',
-#                                         presetStopLossPrice=40000)
-#             isOrder = True
-            
-# #'orderId':'900578326017454081'
-#         while isBuy == False:
-#             endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
-#             historyResult = orderApi.history(t, endTime - (86400 * 1000 * 10), endTime, 200)
-#             historyList = historyResult['data']['orderList']
-#             if historyList is not None:
-#                 for item in historyList:
-#                     if item['clientOid'] == buyResult['data']['orderId']:
-#                         print(item)
-#                         if item['state'] == 'filled':
-#                             buyPrice = item['priceAvg']
-#                             print('매수 됨', buyPrice)
-#                             isBuy = True
-#                             break
-#             time.sleep(1)
-        
-#         print()
-        # marketPrice = marketApi.market_price(t)
-        # if marketPrice is None:
-        #     print('marketPrice is none')
-        #     #API 에러가 났을시 컨티뉴해서 다음 턴에 다시 시도한다
-        #     continue
-                    
-        # currentPrice = float(marketPrice['data']['markPrice'])
-        currentPrice = float(candle_data[-1][4])
-        # print('currentPrice : ', currentPrice)
-        # print('price : ', float(candle_data[-1][4]))
-        
-        # market = marketApi.market_price(t)
-        # if market is None:
-        #     print('marketPrice is none')
-        # marketPrice = float(market['data']['markPrice'])
 
         buffer = hight - low
         beforePer = round(((hight - low) / low) * 100, 2)
@@ -650,7 +628,7 @@ def oneDay():
             #예약 매수 걸려있지 않은 경우 롱 숏 잡아두기
             size = getSize(t)
             
-            buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='market',
+            buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
                             triggerPrice=longPrice,
                             executePrice=longPrice,
                             triggerType='fill_price',
@@ -659,15 +637,16 @@ def oneDay():
                 tickerDict[t]['long']['orderId'] = buyResult['data']['orderId']   #예약 아이디
                 tickerDict[t]['long']['size'] = size   #매수 건 사이즈
                 tickerDict[t]['long']['buy'] = False   #매수가 됐는지 여부
-                msg = t + ' long 예약매수 완료 ' + str(round(longPrice * size , 2))
+                msg = t + 'long 예약매수 완료 ' + str(round(longPrice * size , 2))
                 print(getTime(), msg)
-                # bot.sendMessage(chat_id=chatId, text=msg)
+                bot.sendMessage(chat_id=chatId, text=msg)
+                time.sleep(1)
             else:
-                # bot.sendMessage(chat_id=chatId, text=(t + '예약매수 에러'))
+                bot.sendMessage(chat_id=chatId, text=(t + '예약매수 에러'))
                 print(t, 'buy api none')
                 
                 
-            buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='market',
+            buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
                             triggerPrice=shortPrice,
                             executePrice=shortPrice,
                             triggerType='fill_price',
@@ -677,12 +656,13 @@ def oneDay():
                 tickerDict[t]['short']['orderId'] = buyResult['data']['orderId']   #예약 아이디
                 tickerDict[t]['short']['size'] = size   #매수 건 사이즈
                 tickerDict[t]['short']['buy'] = False   #매수가 됐는지 여부
-                msg = t + ' short 예약매수 완료 ' + str(round(longPrice * size , 2))
+                msg = t + 'short 예약매수 완료 ' + str(round(longPrice * size , 2))
                 print(getTime(), msg)
-                # bot.sendMessage(chat_id=chatId, text=msg)
+                bot.sendMessage(chat_id=chatId, text=msg)
+                time.sleep(1)
             else:
                 print(t, 'buy api none')
-                # bot.sendMessage(chat_id=chatId, text=(t + '예약매수 에러'))                
+                bot.sendMessage(chat_id=chatId, text=(t + '예약매수 에러'))                
                                 
             tickerDict[t]['reservation'] = True    #예약 걸었는지 여부
             
@@ -698,7 +678,8 @@ def oneDay():
                     tickerDict[t]['long']['price'] = buyPrice
                     msg = t + ' long 매수 완료 ' + str(buyPrice)
                     print(getTime(), msg)
-                    # bot.sendMessage(chat_id=chatId, text=msg)
+                    bot.sendMessage(chat_id=chatId, text=msg)
+                    time.sleep(1)
                     
             # if bool(tickerDict[t]['short'].get('orderId')) == True and bool(tickerDict[t]['short'].get('buy')) == False:
             if bool(tickerDict[t]['short'].get('buy')) == False:
@@ -708,17 +689,21 @@ def oneDay():
                     tickerDict[t]['short']['price'] = buyPrice
                     msg = t + ' short 매수 완료 ' + str(buyPrice)
                     print(getTime(), msg)
-                    # bot.sendMessage(chat_id=chatId, text=msg)
+                    bot.sendMessage(chat_id=chatId, text=msg)
+                    time.sleep(1)
         
+            limitOrderCancelIfNotBuy(t)
+
             if bool(tickerDict[t]['long'].get('buy')) == True or bool(tickerDict[t]['short'].get('buy')) == True: 
                 #매수 된 경우
                 position = 'long'
                 side = 'close_long'
                 multiply = 1
                 if bool(tickerDict[t]['short'].get('buy')) == True:
-                    position = 'short'
-                    side = 'close_short'
-                    multiply = -1
+                    if tickerDict[t]['short']['buy'] == True:
+                        position = 'short'
+                        side = 'close_short'
+                        multiply = -1
                 
                 try:
                     highRun.remove(t)
@@ -736,10 +721,10 @@ def oneDay():
                         tickerDict[t]['short'] = {}
                     
                     isSell = True
-                    msg = t + ' ' + position + ' 매도 완료 ' + str(nowStatus['totalProfits'])
+                    msg = t + ' ' + position + ' 매도 완료 ' + '수익금: ' + str(nowStatus['totalProfits'])
                     print(getTime(), msg)
-                    # bot.sendMessage(chat_id=chatId, text=msg)
-                                        
+                    bot.sendMessage(chat_id=chatId, text=msg)
+                    
                     
                     #스탑리밋에 등록된게 있으면 취소
                     if bool(tickerDict[t][position].get('tkOrderId')) == True:
@@ -769,7 +754,8 @@ def oneDay():
                 per = round((((marketPrice / buyPrice) * 100) - 100) * leverage * multiply, 2)
                 # print(t, 'per : ', per)
 
-                if per >= 30:
+                # if per >= 30:
+                if per >= 20:
                     if bool(tickerDict[t][position].get('tkMargin')) == False:
                         tickerDict[t][position]['tkMargin'] = 0.0
                     
@@ -779,12 +765,16 @@ def oneDay():
                     if bool(tickerDict[t][position].get('maxPer')) == False:
                         tickerDict[t][position]['maxPer'] = 0.0
 
-                    if per < 50:
+                    if per < 40:
                         #수익률이 30~49% 사이인 경우 70% 떨어진 경우 손절
                         tkMargin = 0.7
+                    elif per < 60:
+                        tkMargin = 0.6
+                    elif per < 80:
+                        tkMargin = 0.5
                     elif per < 100:
                         #수익률이 50~99% 사이인 경우 50% 떨어진 경우 손절
-                        tkMargin = 0.5
+                        tkMargin = 0.4
                     else:
                         #수익률이 100% 이상인 경우 30% 떨어진 경우 손절
                         tkMargin = 0.3
@@ -801,53 +791,26 @@ def oneDay():
                         if oldTkMargin != tkMargin:
                             msg = t + ' ' + position + ' 익절라인 업데이트 : ' + str(round(((1-tkMargin) * 100.0), 2)) + '%'
                             print(getTime(), msg)
-                            # bot.sendMessage(chat_id=chatId, text=msg)
+                            bot.sendMessage(chat_id=chatId, text=msg)
                             
                         tickerDict[t][position]['tkMargin'] = tkMargin
 
                         if bool(tickerDict[t][position].get('tkOrderId')) == True:
                             tkOrderId = tickerDict[t][position]['tkOrderId']
                             planApi.cancel_plan(t, coin, tkOrderId, 'normal_plan')
-
+                            time.sleep(1)
+                            
                         # triggerPrice = marketPrice - (((marketPrice - buyPrice) * tkMargin) * (multiply))
                         triggerPrice = marketPrice - (((marketPrice - buyPrice) * tkMargin))
                         triggerPrice = setEndStep(t, round(triggerPrice, priceDecimal(t)))
                         
                         size = tickerDict[t][position]['size']
-                        tkResult = planApi.place_plan(t, marginCoin=coin, size=size, side=side, orderType='market',
+                        tkResult = planApi.place_plan(t, marginCoin=coin, size=size, side=side, orderType='limit',
                                 triggerPrice=triggerPrice,
                                 triggerType='fill_price',
                                 executePrice=triggerPrice)
                         if tkResult is not None:
                             tickerDict[t][position]['tkOrderId'] = tkResult['data']['orderId']
-
-                        
-                        
-                    # if per > oldPer:    #수익률이 올랐을때만 업데이트
-                    #     oldTkMargin = tickerDict[t][position]['tkMargin']
-                    #     if oldTkMargin != tkMargin:
-                    #         msg = t + ' ' + position + ' 익절라인 업데이트 : ' + str((1-tkMargin) * 100.0) + '%'
-                    #         print(getTime(), msg)
-                    #         # bot.sendMessage(chat_id=chatId, text=msg)
-
-                    #     tickerDict[t][position]['tkMargin'] = tkMargin
-
-                    #     if bool(tickerDict[t][position].get('tkOrderId')) == True:
-                    #         tkOrderId = tickerDict[t][position]['tkOrderId']
-                    #         planApi.cancel_plan(t, coin, tkOrderId, 'normal_plan')
-
-                    #     triggerPrice = marketPrice - (((marketPrice - buyPrice) * tkMargin) * (multiply*-1))
-                    #     triggerPrice = setEndStep(t, round(triggerPrice, priceDecimal(t)))
-                        
-                    #     size = tickerDict[t][position]['size']
-                    #     tkResult = planApi.place_plan(t, marginCoin=coin, size=size, side=side, orderType='limit',
-                    #             triggerPrice=triggerPrice,
-                    #             triggerType='fill_price',
-                    #             executePrice=triggerPrice)
-                    #     if tkResult is not None:
-                    #         tickerDict[t][position]['tkOrderId'] = tkResult['data']['orderId']
-                            
-                    # tickerDict[t][position]['oldPer'] = per
                         
 
         time.sleep(1)

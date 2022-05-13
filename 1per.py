@@ -37,7 +37,7 @@ EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
 ticker = BTC_Ticker
 coin = 'SUSDT'
-leverage = 10
+leverage = 20
 check_cci = 95
 excuteMargin = 0.004
 buyMargin = 0.0004
@@ -472,7 +472,7 @@ def getSizePer():
     return 0.5
 
 def getSize(t):
-    available = 100 #내가 투자 할 총 시드
+    available = 200 #내가 투자 할 총 시드
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -573,7 +573,8 @@ def check():
             digits = len(closeStr[1])  #소수점 몇자리인지
 
         #골든 또는 데드가 났는데 구매하지 않은 경우 무조건 구매
-        if isMaxBuy == False and (cross == 'gold' or cross == 'dead') and bool(tickerDict[t].get('orderId')) == False and bool(tickerDict[t].get('sellOrderId')) == False and buyPrice == -1:
+        # if isMaxBuy == False and (cross == 'gold' or cross == 'dead') and bool(tickerDict[t].get('orderId')) == False and bool(tickerDict[t].get('sellOrderId')) == False and buyPrice == -1:
+        if True:
             #주문 전 등록된 체결이 안된 주문이 있으면 취소처리를 먼저 해준다
             limitList = orderApi.current(t)
             cancelOrders = []
@@ -597,7 +598,7 @@ def check():
                 # buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=round(close-(close*0.001), digits), timeInForceValue='normal')
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_long', orderType='limit', price=close, timeInForceValue='normal')
                 if buyResult is None:
-                    print('buyResult is None', 'size : ', size, 'price : ', close)
+                    print(t, 'buyResult is None', 'size : ', size, 'price : ', close)
                 else:
                     tickerDict[t]['type'] = 'long'
                     tickerDict[t]['orderId'] = buyResult['data']['orderId']
@@ -607,7 +608,7 @@ def check():
                 # buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=round(close+(close*0.001), digits), timeInForceValue='normal')
                 buyResult = orderApi.place_order(t, coin, size=size, side='open_short', orderType='limit', price=close, timeInForceValue='normal')
                 if buyResult is None:
-                    print('buyResult is None', 'size : ', size, 'price : ', close)
+                    print(t, 'buyResult is None', 'size : ', size, 'price : ', close)
                 else:
                     tickerDict[t]['type'] = 'short'
                     tickerDict[t]['orderId'] = buyResult['data']['orderId']
