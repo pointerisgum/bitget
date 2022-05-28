@@ -4,6 +4,7 @@ import time
 import os
 import sys
 import logging
+from tokenize import String
 # from tkinter.messagebox import NO
 import traceback
 ###
@@ -37,7 +38,7 @@ chatId = "-682086795"
 api_key = "bg_c2e86c21f1af686f340a9d7752275c70"
 secret_key = "556337e606fee895337b40bae2daed577c78ed7cd6f76b8bb0d1ff78181ec10e"
 passphrase = "lsh790308"
-myAvailable = 1000
+myAvailable = 2000
 
 #내꺼
 # api_key = "bg_d824038ea0c0f9a80ecc2b62b4e46e3a"
@@ -51,7 +52,7 @@ myAvailable = 1000
 
 # ticker = BTC_Ticker
 coin = 'USDT'
-leverage = 20
+leverage = 5
 # check_cci = 95
 # excuteMargin = 0.004
 # buyMargin = 0.0004
@@ -290,7 +291,16 @@ else:
     # tickers = ['SOLUSDT_UMCBL', 'LUNAUSDT_UMCBL']
     tickers = ['BTCUSDT_UMCBL']
 
-        
+tickerList = marketApi.tickers('UMCBL')
+for t in tickerList['data']:
+    marketPrice = marketApi.market_price(t['symbol'])
+    if marketPrice is None:
+        print('marketPrice is none')
+        continue                    
+    currentPrice = float(marketPrice['data']['markPrice'])
+    if currentPrice > 1:
+        tickers.append(t['symbol'])
+
 tickerDict = {}
 highRun = []
 
@@ -368,9 +378,10 @@ def setEndStep(t, price):
     
 
 def getSize(t):
-    available = 500 #내가 투자 할 총 시드
+    # available = 500 #내가 투자 할 총 시드
     # buyAvailable = (available / 2) * (1/len(tickers))
-    buyAvailable = available * (1/len(tickers))
+    # buyAvailable = available * (1/len(tickers))
+    buyAvailable = 10
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -612,6 +623,11 @@ def oneDay():
                     
         # currentPrice = float(marketPrice['data']['markPrice'])
         currentPrice = float(candle_data[-1][4])
+        
+        #가격이 0.1보다 작은건 패스
+        if currentPrice <= 0.1:
+            continue
+        
         # print('currentPrice : ', currentPrice)
         # print('price : ', float(candle_data[-1][4]))
         
@@ -650,11 +666,18 @@ def oneDay():
             #예약 매수 걸려있지 않은 경우 롱 숏 잡아두기
             size = getSize(t)
             
+            #손절라인은 2%
+            longLossPrice = setEndStep(t, round(longPrice - (longPrice * 0.03), priceDecimal(t)))
+            print(t, '롱 매수 예약 가격 : ', longPrice)
+            print(t, '롱 손절 예약 가격 : ', longLossPrice)
             buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='market',
                             triggerPrice=longPrice,
                             executePrice=longPrice,
                             triggerType='fill_price',
-                            presetStopLossPrice=shortPrice)
+                            presetStopLossPrice=longLossPrice)
+            if type(buyResult) == str:
+                continue
+            
             if buyResult is not None:
                 tickerDict[t]['long']['orderId'] = buyResult['data']['orderId']   #예약 아이디
                 tickerDict[t]['long']['size'] = size   #매수 건 사이즈
@@ -666,12 +689,21 @@ def oneDay():
                 # bot.sendMessage(chat_id=chatId, text=(t + '예약매수 에러'))
                 print(t, 'buy api none')
                 
-                
+            
+            #손절라인은 2%
+            shortLossPrice = setEndStep(t, round(shortPrice + (shortPrice * 0.03), priceDecimal(t)))
+            print(t, '숏 매수 예약 가격 : ', shortPrice)
+            print(t, '숏 손절 예약 가격 : ', shortLossPrice)
+
             buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='market',
                             triggerPrice=shortPrice,
                             executePrice=shortPrice,
                             triggerType='fill_price',
-                            presetStopLossPrice=longPrice)
+                            presetStopLossPrice=shortLossPrice)
+            
+            if type(buyResult) == str:
+                continue
+
             if buyResult is not None:
                 # print('숏 예약 아이디 : ', buyResult['data']['orderId'])
                 tickerDict[t]['short']['orderId'] = buyResult['data']['orderId']   #예약 아이디
@@ -929,11 +961,11 @@ def oneDay():
 
 #     # time.sleep(0.1)
 
-oneDayJob = schedule.every(60).seconds.do(lambda: oneDay())
+oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-# initTickers()
+initTickers()
 schedule.every().day.at("01:00:01").do(lambda: initTickers())
-#
+
 
 print('start')
 # initTickers()
