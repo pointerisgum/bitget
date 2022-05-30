@@ -292,14 +292,17 @@ else:
     tickers = ['BTCUSDT_UMCBL']
 
 tickerList = marketApi.tickers('UMCBL')
+# for t in tickerList['data']:
+#     marketPrice = marketApi.market_price(t['symbol'])
+#     if marketPrice is None:
+#         print('marketPrice is none')
+#         continue                    
+#     currentPrice = float(marketPrice['data']['markPrice'])
+#     if currentPrice > 1:
+#         tickers.append(t['symbol'])
+
 for t in tickerList['data']:
-    marketPrice = marketApi.market_price(t['symbol'])
-    if marketPrice is None:
-        print('marketPrice is none')
-        continue                    
-    currentPrice = float(marketPrice['data']['markPrice'])
-    if currentPrice > 1:
-        tickers.append(t['symbol'])
+    tickers.append(t['symbol'])
 
 tickerDict = {}
 highRun = []
@@ -381,7 +384,7 @@ def getSize(t):
     # available = 500 #내가 투자 할 총 시드
     # buyAvailable = (available / 2) * (1/len(tickers))
     # buyAvailable = available * (1/len(tickers))
-    buyAvailable = 10
+    buyAvailable = 30
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
@@ -812,13 +815,13 @@ def oneDay():
                         tickerDict[t][position]['maxPer'] = 0.0
 
                     if per < 50:
-                        #수익률이 30~49% 사이인 경우 70% 떨어진 경우 손절
+                        #수익률이 30~49% 사이인 경우 70% 떨어진 경우 익절
                         tkMargin = 0.7
                     elif per < 100:
-                        #수익률이 50~99% 사이인 경우 50% 떨어진 경우 손절
+                        #수익률이 50~99% 사이인 경우 50% 떨어진 경우 익절
                         tkMargin = 0.5
                     else:
-                        #수익률이 100% 이상인 경우 30% 떨어진 경우 손절
+                        #수익률이 100% 이상인 경우 30% 떨어진 경우 익절
                         tkMargin = 0.3
                         highRun.append(t)
                     
