@@ -668,6 +668,7 @@ def oneDay():
         longPrice = setEndStep(t, round(close + long_buffer, priceDecimal(t)))
         shortPrice = setEndStep(t, round(close - short_buffer, priceDecimal(t)))
 
+###
         if nowHigh > longPrice:
             # print(t, '이미 롱 매수 타이밍 지남')
             continue
