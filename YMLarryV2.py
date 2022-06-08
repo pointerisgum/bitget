@@ -602,7 +602,7 @@ def reserveOrder(t):
     
     #가격이 0.1보다 작은건 패스
     if currentPrice <= 10:
-        print(t, '가격이 10 예약 매수 미만이라 패스')
+        # print(t, '가격이 10 예약 매수 미만이라 패스')
         return
             
     buffer = high - low
@@ -630,7 +630,7 @@ def reserveOrder(t):
     #     return
     
     if currentPrice > longPrice or currentPrice < shortPrice:
-        print(getTime(), t, '매수 타이밍 지남')
+        # print(getTime(), t, '매수 타이밍 지남')
         return
     
     if longPrice == shortPrice:
@@ -770,7 +770,9 @@ def oneDay():
                 #     print()
                     
                 #-2% 빠진 경우 손절
-                if orgPer < -2:
+                # if orgPer < -2:
+                #-20% 빠진 경우 손절
+                if per <= -20:
                     side = 'close_long'
                     if multiply == -1:
                         side = 'close_short'
@@ -780,10 +782,10 @@ def oneDay():
                     return
                 
 
-                #최소 익절라인 퍼센트는 30%로 설정
-                if per >= 30:
+                #최소 익절라인 퍼센트는 20%로 설정
+                if per >= 20:
                     if bool(buysDict[t].get('maxPer')) == False:
-                        buysDict[t]['maxPer'] = float(30.00)
+                        buysDict[t]['maxPer'] = float(20.00)
                         print(getTime(), t, ' ', status['side'], '익절 라인 등록', per)
                     else:
                         oldMaxPer = buysDict[t]['maxPer']
@@ -902,8 +904,8 @@ def oneDay():
 
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-initTickers()
-schedule.every().day.at("01:00:01").do(lambda: initTickers())
+# initTickers()
+schedule.every().day.at("01:01:01").do(lambda: initTickers())
 
 
 

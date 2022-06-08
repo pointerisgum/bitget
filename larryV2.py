@@ -602,7 +602,7 @@ def reserveOrder(t):
     
     #가격이 0.1보다 작은건 패스
     if currentPrice <= 10:
-        print(t, '가격이 10 예약 매수 미만이라 패스')
+        # print(t, '가격이 10 예약 매수 미만이라 패스')
         return
             
     buffer = high - low
@@ -630,7 +630,7 @@ def reserveOrder(t):
     #     return
     
     if currentPrice > longPrice or currentPrice < shortPrice:
-        print(getTime(), t, '매수 타이밍 지남')
+        # print(getTime(), t, '매수 타이밍 지남')
         return
     
     if longPrice == shortPrice:
@@ -670,7 +670,7 @@ def reserveOrder(t):
                         executePrice=longPrice,
                         triggerType='fill_price')
                         # presetStopLossPrice=longPrice-lossPrice)
-        print(getTime(), t, '롱 매수 예약 : ', longPrice, buyResult['msg'])
+        # print(getTime(), t, '롱 매수 예약 : ', longPrice, buyResult['msg'])
         # print(getTime(), t, '롱 손절 예약 가격 : ', longPrice-lossPrice)
         # print(getTime(), t, '롱 예약매수 결과 : ', buyResult['msg'])
     
@@ -680,12 +680,12 @@ def reserveOrder(t):
                 executePrice=shortPrice,
                 triggerType='fill_price')
                 # presetStopLossPrice=shortPrice+lossPrice)
-        print(getTime(), t, '숏 매수 예약 : ', shortPrice, buyResult['msg'])
+        # print(getTime(), t, '숏 매수 예약 : ', shortPrice, buyResult['msg'])
         # print(getTime(), t, '숏 손절 예약 가격 : ', shortPrice+lossPrice)
         # print(getTime(), t, '숏 예약매수 결과 : ', buyResult)
 
-    if didLong == False or didShort == False:
-        print(t, '예약주문완료')
+    # if didLong == False or didShort == False:
+    #     print(t, '예약주문완료')
 
 # def addTkTrigger(t, marketPrice, buyPrice, tkMargin):
 #     if bool(buysDict[t].get('tkOrderId')) == True:
@@ -772,7 +772,7 @@ def oneDay():
                 #-2% 빠진 경우 손절
                 # if orgPer < -2:
                 #-20% 빠진 경우 손절
-                if per >= -20:
+                if per <= -20:
                     side = 'close_long'
                     if multiply == -1:
                         side = 'close_short'
@@ -782,7 +782,7 @@ def oneDay():
                     return
                 
 
-                #최소 익절라인 퍼센트는 30%로 설정
+                #최소 익절라인 퍼센트는 20%로 설정
                 if per >= 20:
                     if bool(buysDict[t].get('maxPer')) == False:
                         buysDict[t]['maxPer'] = float(20.00)
