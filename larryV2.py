@@ -601,8 +601,8 @@ def reserveOrder(t):
     currentPrice = float(candle_data[-1][4])
     
     #가격이 0.1보다 작은건 패스
-    if currentPrice <= 10:
-        # print(t, '가격이 10 예약 매수 미만이라 패스')
+    if currentPrice <= 0.1:
+        # print(t, '가격이 0.1 미만이라 패스')
         return
             
     buffer = high - low

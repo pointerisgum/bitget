@@ -54,7 +54,7 @@ coin = 'USDT'
 coinType = 'UMCBL'
 # coin = 'SUSDT'
 # coinType = 'SUMCBL'
-leverage = 20
+leverage = 5
 # check_cci = 95
 # excuteMargin = 0.004
 # buyMargin = 0.0004
@@ -601,8 +601,8 @@ def reserveOrder(t):
     currentPrice = float(candle_data[-1][4])
     
     #가격이 0.1보다 작은건 패스
-    if currentPrice <= 10:
-        # print(t, '가격이 10 예약 매수 미만이라 패스')
+    if currentPrice <= 0.1:
+        # print(t, '가격이 0.1 미만이라 패스')
         return
             
     buffer = high - low
@@ -904,7 +904,7 @@ def oneDay():
 
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-# initTickers()
+initTickers()
 schedule.every().day.at("01:01:01").do(lambda: initTickers())
 
 
