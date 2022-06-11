@@ -1,4 +1,5 @@
 from cgitb import reset
+from genericpath import getsize
 from pickle import FALSE, TRUE
 import time
 import os
@@ -393,7 +394,7 @@ def getSize(t):
     # buyAvailable = (available / 2) * (1/len(tickers))
     # buyAvailable = available * (1/len(tickers))
     if t == 'BTCUSDT_UMCBL':
-        buyAvailable = 100
+        buyAvailable = 200
     else:
         buyAvailable = 10
     
@@ -527,10 +528,10 @@ def initTickers():
         
         #예약매수 걸려 있는것 취소
         cancelPlan(t)
-
+        
         #예약주문 넣기
         reserveOrder(t)
-
+        
         # #구매중인게 있을땐 시장가 매도
         # if bool(buysDict.get(t)) == True:
         #     if bool(buysDict[t].get('orderId')) == True:
@@ -561,7 +562,7 @@ def initTickers():
         # buysDict[t] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(10).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(1).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
@@ -597,7 +598,6 @@ def reserveOrder(t):
         else:
             time.sleep(1)
 
-        
     currentPrice = float(candle_data[-1][4])
     
     #가격이 0.1보다 작은건 패스
@@ -639,17 +639,17 @@ def reserveOrder(t):
     
     
     #이미 등록된게 있는지 검사
-    didLong = False
-    didShort = False
-    result = planApi.current_plan(t)
-    if result is None:
-        return
+    # didLong = False
+    # didShort = False
+    # result = planApi.current_plan(t)
+    # if result is None:
+    #     return
     
-    for data in result['data']:
-        if data['side'] == 'open_long':
-            didLong = True
-        elif data['side'] == 'open_short':
-            didShort = True
+    # for data in result['data']:
+    #     if data['side'] == 'open_long':
+    #         didLong = True
+    #     elif data['side'] == 'open_short':
+    #         didShort = True
             
         # result = planApi.cancel_plan(t, coin, data['orderId'], data['planType'])
         # print(getTime(), t, '예약 대기 취소', result)
@@ -658,34 +658,42 @@ def reserveOrder(t):
 
     
     
-    size = getSize(t) 
-    buysDict[t]['buySize'] = size
+    # size = getSize(t) 
+    # buysDict[t]['buySize'] = size
+    buysDict[t]['longPrice'] = longPrice
+    buysDict[t]['shortPrice'] = shortPrice
     
-    #손절라인은 -2%
-    # lossPrice = setEndStep(t, round(low * 0.02, priceDecimal(t)))
+    # #손절라인은 -2%
+    # # lossPrice = setEndStep(t, round(low * 0.02, priceDecimal(t)))
     
-    if didLong == False:
-        buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
-                        triggerPrice=longPrice,
-                        executePrice=longPrice,
-                        triggerType='fill_price')
-                        # presetStopLossPrice=longPrice-lossPrice)
-        print(getTime(), t, '롱 매수 예약 : ', longPrice, buyResult['msg'])
-        # print(getTime(), t, '롱 손절 예약 가격 : ', longPrice-lossPrice)
-        # print(getTime(), t, '롱 예약매수 결과 : ', buyResult['msg'])
+    # if didLong == False:
+    #     buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_long', orderType='limit',
+    #                     triggerPrice=longPrice,
+    #                     executePrice=longPrice,
+    #                     triggerType='fill_price')
+    #                     # presetStopLossPrice=longPrice-lossPrice)
+    #     print(getTime(), t, '롱 매수 예약 : ', longPrice, buyResult['msg'])
+    #     # print(getTime(), t, '롱 손절 예약 가격 : ', longPrice-lossPrice)
+    #     # print(getTime(), t, '롱 예약매수 결과 : ', buyResult['msg'])
     
-    if didShort == False:
-        buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
-                triggerPrice=shortPrice,
-                executePrice=shortPrice,
-                triggerType='fill_price')
-                # presetStopLossPrice=shortPrice+lossPrice)
-        print(getTime(), t, '숏 매수 예약 : ', shortPrice, buyResult['msg'])
-        # print(getTime(), t, '숏 손절 예약 가격 : ', shortPrice+lossPrice)
-        # print(getTime(), t, '숏 예약매수 결과 : ', buyResult)
+    # if didShort == False:
+    #     buyResult = planApi.place_plan(t, marginCoin=coin, size=size, side='open_short', orderType='limit',
+    #             triggerPrice=shortPrice,
+    #             executePrice=shortPrice,
+    #             triggerType='fill_price')
+    #             # presetStopLossPrice=shortPrice+lossPrice)
+    #     print(getTime(), t, '숏 매수 예약 : ', shortPrice, buyResult['msg'])
+    #     # print(getTime(), t, '숏 손절 예약 가격 : ', shortPrice+lossPrice)
+    #     # print(getTime(), t, '숏 예약매수 결과 : ', buyResult)
 
-    if didLong == False or didShort == False:
-        print(t, '예약주문완료')
+    # if didLong == False or didShort == False:
+    #     print(t, '예약주문완료')
+
+
+
+
+
+
 
 # def addTkTrigger(t, marketPrice, buyPrice, tkMargin):
 #     if bool(buysDict[t].get('tkOrderId')) == True:
@@ -730,7 +738,15 @@ def reserveOrder(t):
 #         #수익률이 71% 이상인 경우 30% 떨어진 경우 익절
 #         tkMargin = 0.3
 
+def getMarketPrice(t):
+    market = marketApi.market_price(t)
+    if market is None:
+        print(getTime(), 'market API is none')
+        return None
+    
+    return float(market['data']['markPrice'])
 
+ 
 def oneDay():
     for t in tickers:
         # if t == 'ICPUSDT_UMCBL':
@@ -750,21 +766,18 @@ def oneDay():
                 buysDict[t]['size'] = status['size']
                 buysDict[t]['side'] = status['side']
         
-                market = marketApi.market_price(t)
-                if market is None:
-                    print(getTime(), 'market API is none')
-                    #API 에러가 났을시 컨티뉴해서 다음 턴에 다시 시도한다
+                marketPrice = getMarketPrice(t)
+                if marketPrice is None:
                     continue
                 
-                marketPrice = float(market['data']['markPrice'])
                 buyPrice = float(status['priceAvg'])
                 orgPer = round((((marketPrice / buyPrice) * 100) - 100) * multiply, 2)
                 per = round(orgPer * leverage, 2)
                 
                 
-                size = status['size']
-                if bool(buysDict[t].get('buySize')) == True:
-                    size = buysDict[t]['buySize']
+                # size = status['size']
+                # if bool(buysDict[t].get('buySize')) == True:
+                #     size = buysDict[t]['buySize']
                 
                 # if t == 'ICPUSDT_UMCBL':
                 #     print()
@@ -779,7 +792,7 @@ def oneDay():
                     result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
                     print(getTime(), t, ' ', status['side'], '손절 실행', result, per)
                     buysDict[t] = {} #손절 후 데이터 초기화
-                    return
+                    continue
                 
 
                 #최소 익절라인 퍼센트는 20%로 설정
@@ -805,12 +818,42 @@ def oneDay():
                         result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
                         print(getTime(), t, ' ', status['side'], '익절 실행', result, per)
                         buysDict[t] = {} #익절 후 데이터 초기화
-                        return
+                        continue
 
                             
-            elif (status['side'] == 'close_long') or (status['side'] == 'close_short'):
-                #매도 후 재등록
-                reserveOrder(t)
+            # elif (status['side'] == 'close_long') or (status['side'] == 'close_short'):
+            else:
+                if bool(buysDict[t].get('addLimitBuy')) == False:
+                    #아직 매수를 안한 경우 매수 조건이 됐는지 체크
+                    if bool(buysDict[t].get('longPrice')) == True and bool(buysDict[t].get('shortPrice')) == True:
+                        #매수 가능한 애들만 longPrice과 shortPrice 값이 있다
+                        longPrice = buysDict[t]['longPrice']
+                        shortPrice = buysDict[t]['shortPrice']
+
+                        marketPrice = getMarketPrice(t)
+                        if marketPrice is None:
+                            continue
+                        
+                        if marketPrice >= longPrice:
+                            size = getSize(t)
+                            buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+                            orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
+                            buysDict[t]['addLimitBuy'] = True
+                            print(getTime(), t, '롱 예약 매수')
+                        elif marketPrice <= shortPrice:
+                            size = getSize(t)
+                            buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+                            orderApi.place_order(t, marginCoin=coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
+                            buysDict[t]['addLimitBuy'] = True
+                            print(getTime(), t, '숏 예약 매수')
+                        
+
+            #     #매도 후 재등록
+            #     reserveOrder(t)
+            
+            
+            
+            
                 # #매도 친 경우 데이터 지워주기
                 # if len(buysDict[t]) > 0:
                 #     print(getTime(), t, ' 상태값 close로 변경되어 데이터 초기화')
