@@ -461,8 +461,10 @@ def getNowStatus(t):
         historyList = historyResult['data']['orderList']
         if historyList is not None and len(historyList) > 0:
             history = historyList[0]
-            if history['state'] == 'filled':
+            if history is not None:
                 return history
+            else:
+                return None
     else:
         print(getTime(), '!!history none!!')
     return None
@@ -562,7 +564,7 @@ def initTickers():
         # buysDict[t] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(1).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(10).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
@@ -580,7 +582,8 @@ def reserveOrder(t):
         
         if candle_data == None:
             time.sleep(1)
-            continue
+            buysDict[t] = {}
+            return
         
         if len(candle_data) > 1:
             # print(getTime(), t, candle_data[-2])
@@ -595,8 +598,13 @@ def reserveOrder(t):
                 break
             else:
                 time.sleep(1)
+                buysDict[t] = {}
+                return
         else:
             time.sleep(1)
+            buysDict[t] = {}
+            return
+
 
     currentPrice = float(candle_data[-1][4])
     
@@ -756,96 +764,187 @@ def oneDay():
         if status is None:
             continue
         
-        if status['state'] == 'filled':
-            if (status['side'] == 'open_long') or (status['side'] == 'open_short'):
-                multiply = 1
-                if status['side'] == 'open_short':
-                    multiply = -1
-                    
-                buysDict[t]['orderId'] = status['orderId']
-                buysDict[t]['size'] = status['size']
-                buysDict[t]['side'] = status['side']
-        
-                marketPrice = getMarketPrice(t)
-                if marketPrice is None:
-                    continue
+        if status['state'] == 'filled' and ((status['side'] == 'open_long') or (status['side'] == 'open_short')):
+            multiply = 1
+            if status['side'] == 'open_short':
+                multiply = -1
                 
-                buyPrice = float(status['priceAvg'])
-                orgPer = round((((marketPrice / buyPrice) * 100) - 100) * multiply, 2)
-                per = round(orgPer * leverage, 2)
+            buysDict[t]['orderId'] = status['orderId']
+            buysDict[t]['size'] = status['size']
+            buysDict[t]['side'] = status['side']
+    
+            marketPrice = getMarketPrice(t)
+            if marketPrice is None:
+                continue
+            
+            buyPrice = float(status['priceAvg'])
+            orgPer = round((((marketPrice / buyPrice) * 100) - 100) * multiply, 2)
+            per = round(orgPer * leverage, 2)
+            
+            
+            # size = status['size']
+            # if bool(buysDict[t].get('buySize')) == True:
+            #     size = buysDict[t]['buySize']
+            
+            # if t == 'ICPUSDT_UMCBL':
+            #     print()
                 
-                
-                # size = status['size']
-                # if bool(buysDict[t].get('buySize')) == True:
-                #     size = buysDict[t]['buySize']
-                
-                # if t == 'ICPUSDT_UMCBL':
-                #     print()
-                    
-                #-2% 빠진 경우 손절
-                # if orgPer < -2:
-                #-20% 빠진 경우 손절
-                if per <= -20:
+            #-2% 빠진 경우 손절
+            # if orgPer < -2:
+            #-20% 빠진 경우 손절
+            if per <= -20:
+                side = 'close_long'
+                if multiply == -1:
+                    side = 'close_short'
+                result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
+                print(getTime(), t, ' ', status['side'], '손절 실행', result, per)
+                buysDict[t] = {} #손절 후 데이터 초기화
+                reserveOrder(t)
+                continue
+            
+
+            #최소 익절라인 퍼센트는 20%로 설정
+            if per >= 20:
+                if bool(buysDict[t].get('maxPer')) == False:
+                    buysDict[t]['maxPer'] = float(20.00)
+                    print(getTime(), t, ' ', status['side'], '익절 라인 등록', per)
+                else:
+                    oldMaxPer = buysDict[t]['maxPer']
+                    if per > oldMaxPer:
+                        buysDict[t]['maxPer'] = per
+                        print(getTime(), t, ' ', status['side'], '익절 라인 업데이트', per)
+
+
+            #최소 익절 라인을 터치 했을때
+            if bool(buysDict[t].get('maxPer')) == True:
+                maxPer = buysDict[t]['maxPer']
+                #고점대비 30% 빠졌을때 익절
+                if maxPer * 0.7 > per:
                     side = 'close_long'
                     if multiply == -1:
                         side = 'close_short'
                     result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
-                    print(getTime(), t, ' ', status['side'], '손절 실행', result, per)
-                    buysDict[t] = {} #손절 후 데이터 초기화
+                    print(getTime(), t, ' ', status['side'], '익절 실행', result, per)
+                    buysDict[t] = {} #익절 후 데이터 초기화
+                    reserveOrder(t)
                     continue
+        else:
+            if bool(buysDict[t].get('addLimitBuy')) == False:
+                #아직 매수를 안한 경우 매수 조건이 됐는지 체크
+                if bool(buysDict[t].get('longPrice')) == True and bool(buysDict[t].get('shortPrice')) == True:
+                    #매수 가능한 애들만 longPrice과 shortPrice 값이 있다
+                    longPrice = buysDict[t]['longPrice']
+                    shortPrice = buysDict[t]['shortPrice']
+
+                    marketPrice = getMarketPrice(t)
+                    if marketPrice is None:
+                        continue
+                    
+                    if marketPrice >= longPrice:
+                        size = getSize(t)
+                        buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
+                        buysDict[t]['addLimitBuy'] = True
+                        print(getTime(), t, '롱 예약 매수')
+                    elif marketPrice <= shortPrice:
+                        size = getSize(t)
+                        buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
+                        buysDict[t]['addLimitBuy'] = True
+                        print(getTime(), t, '숏 예약 매수')                
+                    
+                    
+                    
+        # if status['state'] == 'filled':
+        #     if (status['side'] == 'open_long') or (status['side'] == 'open_short'):
+        #         multiply = 1
+        #         if status['side'] == 'open_short':
+        #             multiply = -1
+                    
+        #         buysDict[t]['orderId'] = status['orderId']
+        #         buysDict[t]['size'] = status['size']
+        #         buysDict[t]['side'] = status['side']
+        
+        #         marketPrice = getMarketPrice(t)
+        #         if marketPrice is None:
+        #             continue
+                
+        #         buyPrice = float(status['priceAvg'])
+        #         orgPer = round((((marketPrice / buyPrice) * 100) - 100) * multiply, 2)
+        #         per = round(orgPer * leverage, 2)
+                
+                
+        #         # size = status['size']
+        #         # if bool(buysDict[t].get('buySize')) == True:
+        #         #     size = buysDict[t]['buySize']
+                
+        #         # if t == 'ICPUSDT_UMCBL':
+        #         #     print()
+                    
+        #         #-2% 빠진 경우 손절
+        #         # if orgPer < -2:
+        #         #-20% 빠진 경우 손절
+        #         if per <= -20:
+        #             side = 'close_long'
+        #             if multiply == -1:
+        #                 side = 'close_short'
+        #             result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
+        #             print(getTime(), t, ' ', status['side'], '손절 실행', result, per)
+        #             buysDict[t] = {} #손절 후 데이터 초기화
+        #             continue
                 
 
-                #최소 익절라인 퍼센트는 20%로 설정
-                if per >= 20:
-                    if bool(buysDict[t].get('maxPer')) == False:
-                        buysDict[t]['maxPer'] = float(20.00)
-                        print(getTime(), t, ' ', status['side'], '익절 라인 등록', per)
-                    else:
-                        oldMaxPer = buysDict[t]['maxPer']
-                        if per > oldMaxPer:
-                            buysDict[t]['maxPer'] = per
-                            print(getTime(), t, ' ', status['side'], '익절 라인 업데이트', per)
+        #         #최소 익절라인 퍼센트는 20%로 설정
+        #         if per >= 20:
+        #             if bool(buysDict[t].get('maxPer')) == False:
+        #                 buysDict[t]['maxPer'] = float(20.00)
+        #                 print(getTime(), t, ' ', status['side'], '익절 라인 등록', per)
+        #             else:
+        #                 oldMaxPer = buysDict[t]['maxPer']
+        #                 if per > oldMaxPer:
+        #                     buysDict[t]['maxPer'] = per
+        #                     print(getTime(), t, ' ', status['side'], '익절 라인 업데이트', per)
 
 
-                #최소 익절 라인을 터치 했을때
-                if bool(buysDict[t].get('maxPer')) == True:
-                    maxPer = buysDict[t]['maxPer']
-                    #고점대비 30% 빠졌을때 익절
-                    if maxPer * 0.7 > per:
-                        side = 'close_long'
-                        if multiply == -1:
-                            side = 'close_short'
-                        result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
-                        print(getTime(), t, ' ', status['side'], '익절 실행', result, per)
-                        buysDict[t] = {} #익절 후 데이터 초기화
-                        continue
+        #         #최소 익절 라인을 터치 했을때
+        #         if bool(buysDict[t].get('maxPer')) == True:
+        #             maxPer = buysDict[t]['maxPer']
+        #             #고점대비 30% 빠졌을때 익절
+        #             if maxPer * 0.7 > per:
+        #                 side = 'close_long'
+        #                 if multiply == -1:
+        #                     side = 'close_short'
+        #                 result = orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
+        #                 print(getTime(), t, ' ', status['side'], '익절 실행', result, per)
+        #                 buysDict[t] = {} #익절 후 데이터 초기화
+        #                 continue
 
                             
-            # elif (status['side'] == 'close_long') or (status['side'] == 'close_short'):
-            else:
-                if bool(buysDict[t].get('addLimitBuy')) == False:
-                    #아직 매수를 안한 경우 매수 조건이 됐는지 체크
-                    if bool(buysDict[t].get('longPrice')) == True and bool(buysDict[t].get('shortPrice')) == True:
-                        #매수 가능한 애들만 longPrice과 shortPrice 값이 있다
-                        longPrice = buysDict[t]['longPrice']
-                        shortPrice = buysDict[t]['shortPrice']
+        #     # elif (status['side'] == 'close_long') or (status['side'] == 'close_short'):
+        #     else:
+        #         if bool(buysDict[t].get('addLimitBuy')) == False:
+        #             #아직 매수를 안한 경우 매수 조건이 됐는지 체크
+        #             if bool(buysDict[t].get('longPrice')) == True and bool(buysDict[t].get('shortPrice')) == True:
+        #                 #매수 가능한 애들만 longPrice과 shortPrice 값이 있다
+        #                 longPrice = buysDict[t]['longPrice']
+        #                 shortPrice = buysDict[t]['shortPrice']
 
-                        marketPrice = getMarketPrice(t)
-                        if marketPrice is None:
-                            continue
+        #                 marketPrice = getMarketPrice(t)
+        #                 if marketPrice is None:
+        #                     continue
                         
-                        if marketPrice >= longPrice:
-                            size = getSize(t)
-                            buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
-                            orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
-                            buysDict[t]['addLimitBuy'] = True
-                            print(getTime(), t, '롱 예약 매수')
-                        elif marketPrice <= shortPrice:
-                            size = getSize(t)
-                            buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
-                            orderApi.place_order(t, marginCoin=coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
-                            buysDict[t]['addLimitBuy'] = True
-                            print(getTime(), t, '숏 예약 매수')
+        #                 if marketPrice >= longPrice:
+        #                     size = getSize(t)
+        #                     buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+        #                     orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
+        #                     buysDict[t]['addLimitBuy'] = True
+        #                     print(getTime(), t, '롱 예약 매수')
+        #                 elif marketPrice <= shortPrice:
+        #                     size = getSize(t)
+        #                     buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
+        #                     orderApi.place_order(t, marginCoin=coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
+        #                     buysDict[t]['addLimitBuy'] = True
+        #                     print(getTime(), t, '숏 예약 매수')
                         
 
             #     #매도 후 재등록
