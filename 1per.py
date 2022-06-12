@@ -901,10 +901,10 @@ def oneDay():
 
 #     # time.sleep(0.1)
 
-oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
-schedule.cancel_job(oneDayJob)
+# oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
+# schedule.cancel_job(oneDayJob)
 initTickers()
-schedule.every().day.at("01:01:01").do(lambda: initTickers())
+# schedule.every().day.at("01:01:01").do(lambda: initTickers())
 
 
 
