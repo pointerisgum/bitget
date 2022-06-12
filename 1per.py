@@ -785,8 +785,13 @@ def oneDay():
                     if bool(buysDict[t].get('position')) == False:
                         buysDict[t]['position'] = 'open_short'
                     
-                    buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.01), priceDecimal(t)))
-                    orderApi.place_order(t, marginCoin=coin, size=size, side=buysDict[t]['position'], orderType='limit', price=buyPrice, timeInForceValue='normal')
+                    position = buysDict[t]['position']
+                    if position == 'open_short':
+                        buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.005), priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')                    
+                    else:
+                        buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.005), priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')
         else:
             if bool(buysDict[t].get('addLimitBuy')) == False:
                 marketPrice = getMarketPrice(t)
@@ -799,9 +804,14 @@ def oneDay():
                 
                 if bool(buysDict[t].get('position')) == False:
                     buysDict[t]['position'] = 'open_short'
-                    
-                buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.01), priceDecimal(t)))
-                orderApi.place_order(t, marginCoin=coin, size=size, side=buysDict[t]['position'], orderType='limit', price=buyPrice, timeInForceValue='normal')
+                
+                position = buysDict[t]['position']
+                if position == 'open_short':
+                    buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.005), priceDecimal(t)))
+                    orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')                    
+                else:
+                    buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.005), priceDecimal(t)))
+                    orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')
 
         time.sleep(1)
 
