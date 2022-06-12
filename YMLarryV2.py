@@ -308,8 +308,9 @@ tickerList = marketApi.tickers(coinType)
 buysDict = {}
 for t in tickerList['data']:
     symbol = t['symbol']
-    tickers.append(symbol)
-    buysDict[symbol] = {}
+    if symbol == 'BTCUSDT_UMCBL':
+        tickers.append(symbol)
+        buysDict[symbol] = {}
 
 
 
