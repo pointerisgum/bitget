@@ -529,45 +529,17 @@ def initTickers():
     
         buysDict[t]['multiply'] = 1
         
-        # #지정가에 등록된게 있다면 취소
-        # limitOrderCancel(t)
+        #디폴트로 우선 숏 잡아두고
+        buysDict[t]['position'] = 'open_short'
         
-        # #예약매수 걸려 있는것 취소
-        # cancelPlan(t)
+        #첫 포지션은 전날 봉에 따름        
+        candle_data = get_candle(t, 86400, 2)
+        if len(candle_data) > 1:
+            open = float(candle_data[-2][1]) #전날 종가
+            close = float(candle_data[-2][4]) #전날 종가
+            if open < close:
+                buysDict[t]['position'] = 'open_long'
         
-        # #예약주문 넣기
-        # reserveOrder(t)
-        
-        # #구매중인게 있을땐 시장가 매도
-        # if bool(buysDict.get(t)) == True:
-        #     if bool(buysDict[t].get('orderId')) == True:
-        #         orderId = buysDict[t]['orderId']
-        #         result = planApi.cancel_plan(t, coin, orderId, 'normal_plan')
-        #         if result is not None:
-        #             print(getTime(), t, '초기화로 스탑리밋 대기 취소')                
-                    
-        #     if bool(buysDict[t].get('size')) == True:
-        #         size = buysDict[t]['size']
-        #         result = orderApi.place_order(t, marginCoin=coin, size=size, side=buysDict[t]['side'], orderType='market', timeInForceValue='normal')
-        #         if result is not None:
-        #             #msg : 예약 매수 완료
-        #             print(getTime(), t, '초기화로 인해 시장가 매도')                
-                    
-        #     if bool(buysDict[t].get('tkOrderId')) == True:
-        #         tkOrderId = buysDict[t]['tkOrderId']
-        #         result = planApi.cancel_plan(t, coin, tkOrderId, 'normal_plan')
-        #         if result is not None:
-        #             print(getTime(), t, '초기화로 인해 익절 대기 취소')
-
-
-
-        # tickerDict[t] = {}
-        # tickerDict[t]['long'] = {}
-        # tickerDict[t]['short'] = {}
-
-        # buysDict[t] = {}
-
-        # schedule.cancel_job(oneDayJob)
         schedule.every(10).seconds.do(lambda: oneDay())
 
 
@@ -780,8 +752,10 @@ def oneDay():
                 if orgPer >= 1:
                     #익절시 배수는 다시 1로
                     orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
+                    oldPosition = buysDict[t]['position']
                     buysDict[t] = {}
                     buysDict[t]['multiply'] = 1
+                    buysDict[t]['position'] = oldPosition
                 elif orgPer <= -1:
                     #손절시 현재 배수의 2배
                     side = 'close_long'
@@ -789,8 +763,14 @@ def oneDay():
                         side = 'close_short'
                     orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
                     oldMultiply = buysDict[t]['multiply']
+                    oldPosition = buysDict[t]['position']
                     buysDict[t] = {}
                     buysDict[t]['multiply'] = oldMultiply * 2
+                    if oldPosition == 'open_long':
+                        buysDict[t]['position'] = 'open_short'
+                    else:
+                        buysDict[t]['position'] = 'open_long'
+                        
                     print(getTime(), t, '손절로 인한 배수 증가', buysDict[t]['multiply'])
             else:
                 if bool(buysDict[t].get('addLimitBuy')) == False:
@@ -801,11 +781,12 @@ def oneDay():
                     buysDict[t]['addLimitBuy'] = True
                     buyAvailable = 10 * buysDict[t]['multiply']
                     size = round((buyAvailable * leverage) / marketPrice, sizeDecimal(t))
+
+                    if bool(buysDict[t].get('position')) == False:
+                        buysDict[t]['position'] = 'open_short'
                     
-                    
-                    #어떤값으로 롱숏을 정할지 고민 중...
                     buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.01), priceDecimal(t)))
-                    orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='limit', price=buyPrice, timeInForceValue='normal')
+                    orderApi.place_order(t, marginCoin=coin, size=size, side=buysDict[t]['position'], orderType='limit', price=buyPrice, timeInForceValue='normal')
         else:
             if bool(buysDict[t].get('addLimitBuy')) == False:
                 marketPrice = getMarketPrice(t)
@@ -816,10 +797,11 @@ def oneDay():
                 buyAvailable = 10 * buysDict[t]['multiply']
                 size = round((buyAvailable * leverage) / marketPrice, sizeDecimal(t))
                 
-                
-                #어떤값으로 롱숏을 정할지 고민 중...
+                if bool(buysDict[t].get('position')) == False:
+                    buysDict[t]['position'] = 'open_short'
+                    
                 buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.01), priceDecimal(t)))
-                orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='limit', price=buyPrice, timeInForceValue='normal')
+                orderApi.place_order(t, marginCoin=coin, size=size, side=buysDict[t]['position'], orderType='limit', price=buyPrice, timeInForceValue='normal')
 
         time.sleep(1)
 
