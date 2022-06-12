@@ -510,9 +510,9 @@ def initTickers():
     # bot.sendMessage(chat_id=chatId, text='프로그램 초기화')
     print(getTime(), 'initTickers()')
     
-    global oneDayJob
+    # global oneDayJob
         
-    schedule.cancel_job(oneDayJob)
+    # schedule.cancel_job(oneDayJob)
 
     for i in range(len(tickers)):
         t = tickers[i]
@@ -567,8 +567,8 @@ def initTickers():
 
         # buysDict[t] = {}
 
-        schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(10).seconds.do(lambda: oneDay())
+        # schedule.cancel_job(oneDayJob)
+        schedule.every(10).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
