@@ -51,10 +51,10 @@ myAvailable = 400
 # ETH_Ticker = 'SETHSUSDT_SUMCBL'
 # EOS_Ticker = 'SEOSSUSDT_SUMCBL'
 
-# coin = 'USDT'
-# coinType = 'UMCBL'
-coin = 'SUSDT'
-coinType = 'SUMCBL'
+coin = 'USDT'
+coinType = 'UMCBL'
+# coin = 'SUSDT'
+# coinType = 'SUMCBL'
 leverage = 5
 # check_cci = 95
 # excuteMargin = 0.004
@@ -266,6 +266,14 @@ def get_candle(ticker, time, count):
         raise
 
 
+def getMarketPrice(t):
+    market = marketApi.market_price(t)
+    if market is None:
+        print(getTime(), 'market API is none')
+        return None
+    
+    return float(market['data']['markPrice'])
+
 
 
 k_long = 0.5
@@ -308,8 +316,11 @@ tickerList = marketApi.tickers(coinType)
 buysDict = {}
 for t in tickerList['data']:
     symbol = t['symbol']
-    tickers.append(symbol)
-    buysDict[symbol] = {}
+    marketPrice = getMarketPrice(symbol)
+    if symbol != 'BTCUSDT_UMCBL':
+        if marketPrice > 10:
+            tickers.append(symbol)
+            buysDict[symbol] = {}
 
 
 
@@ -528,6 +539,7 @@ def initTickers():
         accountApi.leverage(t, coin, leverage, 'short')
     
         buysDict[t]['multiply'] = 1
+        # buysDict[t]['waiting'] = False
         
         #디폴트로 우선 숏 잡아두고
         buysDict[t]['position'] = 'open_short'
@@ -540,7 +552,7 @@ def initTickers():
             if open < close:
                 buysDict[t]['position'] = 'open_long'
         
-        schedule.every(10).seconds.do(lambda: oneDay())
+        schedule.every(1).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
@@ -716,15 +728,66 @@ def reserveOrder(t):
 #         #수익률이 71% 이상인 경우 30% 떨어진 경우 익절
 #         tkMargin = 0.3
 
-def getMarketPrice(t):
-    market = marketApi.market_price(t)
-    if market is None:
-        print(getTime(), 'market API is none')
-        return None
-    
-    return float(market['data']['markPrice'])
 
- 
+def allCancel():
+    tickerList = marketApi.tickers(coinType)
+    for ticker in tickerList['data']:
+        t = ticker['symbol']
+        cancel(t)
+    
+def cancel(t):
+    result = planApi.current_plan(t)
+    for data in result['data']:
+        planApi.cancel_plan(t, coin, data['orderId'], 'normal_plan')
+
+def allLimitOrderCancel():
+    tickerList = marketApi.tickers(coinType)
+    for ticker in tickerList['data']:
+        t = ticker['symbol']
+        limitOrderCancel(t)
+
+def limitOrderCancel(t):
+    limitList = orderApi.current(t)
+    if limitList is not None:
+        cancelOrders = []
+        for i in range(0, len(limitList['data'])):
+            data = limitList['data'][i]
+            if data['state'] == 'new':
+                orderId = data['orderId']
+                cancelOrders.append(orderId)
+        
+        #등록된 지정가가 있으면 cancel
+        if len(cancelOrders) > 0:
+            orderApi.cancel_batch_orders(t, coin, cancelOrders)
+
+def buyCoin(t):
+    if bool(buysDict[t].get('addLimitBuy')) == False:
+        marketPrice = getMarketPrice(t)
+        if marketPrice is None:
+            return False
+
+        limitOrderCancel(t)
+        cancel(t)
+        
+        # buysDict[t]['waiting'] = False
+        buysDict[t]['addLimitBuy'] = True
+        buyAvailable = 10 * buysDict[t]['multiply']
+        size = round((buyAvailable * leverage) / marketPrice, sizeDecimal(t))
+
+        if bool(buysDict[t].get('position')) == False:
+            buysDict[t]['position'] = 'open_short'
+        
+        position = buysDict[t]['position']
+        if position == 'open_short':
+            # buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.001), priceDecimal(t)))
+            orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='market', timeInForceValue='normal')                    
+        else:
+            # buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.001), priceDecimal(t)))
+            orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='market', timeInForceValue='normal')
+            
+        print(getTime(), t, '매수 예약 ', position)
+        return True
+     
 def oneDay():
     for t in tickers:
         # if t == 'ICPUSDT_UMCBL':
@@ -736,11 +799,15 @@ def oneDay():
         
         if status['state'] == 'filled':
             if (status['side'] == 'open_long') or (status['side'] == 'open_short'):
+                # if buysDict[t]['waiting'] == True:
+                #     print('매도 대기 중')
+                #     continue
+                
                 multiply = 1
-                side = 'close_long'
+                side = 'open_long'
                 if status['side'] == 'open_short':
                     multiply = -1
-                    side = 'close_short'
+                    side = 'open_short'
                     
                 marketPrice = getMarketPrice(t)
                 if marketPrice is None:
@@ -751,67 +818,48 @@ def oneDay():
                 
                 if orgPer >= 1:
                     #익절시 배수는 다시 1로
-                    orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
-                    oldPosition = buysDict[t]['position']
+                    if side == 'open_long':
+                        # buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.001), priceDecimal(t)))
+                        # orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_long', orderType='limit', price=buyPrice, timeInForceValue='normal')
+                        orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_long', orderType='market', timeInForceValue='normal')
+                        time.sleep(1)
+                    else:
+                        # buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.001), priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_short', orderType='market', timeInForceValue='normal')
+                        time.sleep(1)
+                        
                     buysDict[t] = {}
+                    # buysDict[t]['waiting'] = True
                     buysDict[t]['multiply'] = 1
-                    buysDict[t]['position'] = oldPosition
+                    buysDict[t]['position'] = side
+                    print(getTime(), t, ' ', side, ' ', '익절')
                 elif orgPer <= -1:
-                    #손절시 현재 배수의 2배
-                    side = 'close_long'
-                    if multiply == -1:
-                        side = 'close_short'
-                    orderApi.place_order(t, marginCoin=coin, size=999999999, side=side, orderType='market', timeInForceValue='normal')
+                    #손절시 현재 배수의 2배                    
+                    if side == 'open_long':
+                        # buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.001), priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_long', orderType='market', timeInForceValue='normal')
+                        time.sleep(1)
+                    else:
+                        # buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.001), priceDecimal(t)))
+                        orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_short', orderType='market', timeInForceValue='normal')
+                        time.sleep(1)
+
                     oldMultiply = buysDict[t]['multiply']
-                    oldPosition = buysDict[t]['position']
                     buysDict[t] = {}
+                    # buysDict[t]['waiting'] = True
                     buysDict[t]['multiply'] = oldMultiply * 2
-                    if oldPosition == 'open_long':
+                    if side == 'open_long':
                         buysDict[t]['position'] = 'open_short'
                     else:
                         buysDict[t]['position'] = 'open_long'
                         
-                    print(getTime(), t, '손절로 인한 배수 증가', buysDict[t]['multiply'])
+                    print(getTime(), t, ' ', side, ' ', '손절로 인한 배수 증가', buysDict[t]['multiply'], ' 손절')
             else:
-                if bool(buysDict[t].get('addLimitBuy')) == False:
-                    marketPrice = getMarketPrice(t)
-                    if marketPrice is None:
-                        continue
-
-                    buysDict[t]['addLimitBuy'] = True
-                    buyAvailable = 10 * buysDict[t]['multiply']
-                    size = round((buyAvailable * leverage) / marketPrice, sizeDecimal(t))
-
-                    if bool(buysDict[t].get('position')) == False:
-                        buysDict[t]['position'] = 'open_short'
+                buySuccess = buyCoin(t)
                     
-                    position = buysDict[t]['position']
-                    if position == 'open_short':
-                        buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.005), priceDecimal(t)))
-                        orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')                    
-                    else:
-                        buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.005), priceDecimal(t)))
-                        orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')
         else:
-            if bool(buysDict[t].get('addLimitBuy')) == False:
-                marketPrice = getMarketPrice(t)
-                if marketPrice is None:
-                    continue
+            buySuccess = buyCoin(t)
 
-                buysDict[t]['addLimitBuy'] = True
-                buyAvailable = 10 * buysDict[t]['multiply']
-                size = round((buyAvailable * leverage) / marketPrice, sizeDecimal(t))
-                
-                if bool(buysDict[t].get('position')) == False:
-                    buysDict[t]['position'] = 'open_short'
-                
-                position = buysDict[t]['position']
-                if position == 'open_short':
-                    buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.005), priceDecimal(t)))
-                    orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')                    
-                else:
-                    buyPrice = setEndStep(t, round(marketPrice - (marketPrice * 0.005), priceDecimal(t)))
-                    orderApi.place_order(t, marginCoin=coin, size=size, side=position, orderType='limit', price=buyPrice, timeInForceValue='normal')
 
         time.sleep(1)
 
