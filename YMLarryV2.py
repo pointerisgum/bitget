@@ -394,9 +394,9 @@ def getSize(t):
     # buyAvailable = (available / 2) * (1/len(tickers))
     # buyAvailable = available * (1/len(tickers))
     if t == 'BTCUSDT_UMCBL':
-        buyAvailable = 200
+        buyAvailable = 300
     else:
-        buyAvailable = 10
+        buyAvailable = 30
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
