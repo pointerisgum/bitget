@@ -792,7 +792,7 @@ def oneDay():
             #-2% 빠진 경우 손절
             # if orgPer < -2:
             #-20% 빠진 경우 손절
-            if per <= -20:
+            if per <= -10:
                 side = 'close_long'
                 if multiply == -1:
                     side = 'close_short'
