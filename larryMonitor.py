@@ -65,69 +65,79 @@ accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_tim
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 
-
+oldEQ = 0
 account = accountApi.accounts('umcbl')
 if account is not None:
-    myAvailable = float(account['data'][0]['available'])
-    equity = float(account['data'][0]['equity'])
-    print(myAvailable)
-    print(equity)
-    print()
+    oldEQ = round(float(account['data'][0]['equity']), 0)
+    # print(oldEQ)
 
 
-tickers = []
-result = marketApi.tickers('UMCBL')
-for t in result['data']:
-    tickers.append(t['symbol'])
+def myEquity():
+    account = accountApi.accounts('umcbl')
+    if account is not None:
+        global oldEQ
+        # myAvailable = float(account['data'][0]['available'])
+        equity = round(float(account['data'][0]['equity']), 0)
+        totalEQ = equity - oldEQ
+        msg = '현재 자산 : ' + str(equity) + ' / ' + '손익 : ' + str(totalEQ)
+        bot.sendMessage(chat_id=chatId, text=msg)
+        oldEQ = equity
 
-def monitoring():
-    for i in range(len(tickers)):
-        t = tickers[i]
+schedule.every().day.at("01:00:00").do(lambda: myEquity())
 
-        day = date.today()
-        nowHour = datetime.now().hour
-        if nowHour < 1:
-            day = date.today() + timedelta(days=-1)
+# tickers = []
+# result = marketApi.tickers('UMCBL')
+# for t in result['data']:
+#     tickers.append(t['symbol'])
 
-        day = day.strftime("%Y-%m-%d") + ' 01:00:00'
+# def monitoring():
+#     for i in range(len(tickers)):
+#         t = tickers[i]
 
-        startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
-        endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
-        historyResult = orderApi.history(t, startTime, endTime, 10)
-        historyList = historyResult['data']['orderList']
-        if historyList is not None:
-            lastTime = 0
-            lastIdx = 0
-            for i in range(len(historyList)):
-                cTime = float(historyList[i]['cTime'])
-                if cTime > lastTime:
-                    lastTime = cTime
-                    lastIdx = i
+#         day = date.today()
+#         nowHour = datetime.now().hour
+#         if nowHour < 1:
+#             day = date.today() + timedelta(days=-1)
+
+#         day = day.strftime("%Y-%m-%d") + ' 01:00:00'
+
+#         startTime = int(time.mktime(datetime.now().strptime(day, '%Y-%m-%d %H:%M:%S').timetuple())) * 1000
+#         endTime = int(pydatetime.datetime.now().timestamp()) * 1000           #현재
+#         historyResult = orderApi.history(t, startTime, endTime, 10)
+#         historyList = historyResult['data']['orderList']
+#         if historyList is not None:
+#             lastTime = 0
+#             lastIdx = 0
+#             for i in range(len(historyList)):
+#                 cTime = float(historyList[i]['cTime'])
+#                 if cTime > lastTime:
+#                     lastTime = cTime
+#                     lastIdx = i
                     
-            h = historyList[lastIdx]
-            if (h['side'] == 'open_long' or h['side'] == 'open_short') and h['state'] == 'filled':
-                #매수 한 경우
-                marketPrice = marketApi.market_price(t)
-                if marketPrice is not None:
-                    currentPrice = float(marketPrice['data']['markPrice'])
-                    buyPrice = float(h['priceAvg'])
-                    #((현재가/구매가)*100)-100
-                    per = 0
-                    if h['side'] == 'open_long':
-                        per = ((currentPrice/buyPrice)*100)-100
-                        msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
-                    if h['side'] == 'open_short':
-                        per = (((currentPrice/buyPrice)*100)-100) * -1
-                        msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
+#             h = historyList[lastIdx]
+#             if (h['side'] == 'open_long' or h['side'] == 'open_short') and h['state'] == 'filled':
+#                 #매수 한 경우
+#                 marketPrice = marketApi.market_price(t)
+#                 if marketPrice is not None:
+#                     currentPrice = float(marketPrice['data']['markPrice'])
+#                     buyPrice = float(h['priceAvg'])
+#                     #((현재가/구매가)*100)-100
+#                     per = 0
+#                     if h['side'] == 'open_long':
+#                         per = ((currentPrice/buyPrice)*100)-100
+#                         msg = t + ':(long) ' + str(round(per * leverage, 2)) + '%'
+#                     if h['side'] == 'open_short':
+#                         per = (((currentPrice/buyPrice)*100)-100) * -1
+#                         msg = t + ':(short) ' + str(round(per * leverage, 2)) + '%'
                     
-                    bot.sendMessage(chat_id=chatId, text=msg)
-                    print(msg)
-        time.sleep(0.1)
+#                     bot.sendMessage(chat_id=chatId, text=msg)
+#                     print(msg)
+#         time.sleep(0.1)
 
 
 
-monitoring()
-schedule.every(600).seconds.do(lambda: monitoring())
+# monitoring()
+# schedule.every(600).seconds.do(lambda: monitoring())
 
-while True:
-    schedule.run_pending()
+# while True:
+#     schedule.run_pending()
