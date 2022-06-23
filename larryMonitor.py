@@ -65,6 +65,21 @@ accountApi = accounts.AccountApi(api_key, secret_key, passphrase, use_server_tim
 planApi = plan.PlanApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_time=False, first=False)
 
+
+
+# while True:
+#     account = accountApi.accounts('umcbl')
+#     if account is not None:
+#         myAvailable = float(account['data'][0]['available'])
+#         equity = float(account['data'][0]['equity'])
+#         print(datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+#         print(myAvailable)
+#         print(equity)
+#         print()
+#     time.sleep(1)
+
+
+
 oldEQ = 0
 account = accountApi.accounts('umcbl')
 if account is not None:
@@ -84,6 +99,8 @@ def myEquity():
         oldEQ = equity
 
 schedule.every().day.at("01:00:00").do(lambda: myEquity())
+
+
 
 # tickers = []
 # result = marketApi.tickers('UMCBL')
@@ -139,5 +156,5 @@ schedule.every().day.at("01:00:00").do(lambda: myEquity())
 # monitoring()
 # schedule.every(600).seconds.do(lambda: monitoring())
 
-# while True:
-#     schedule.run_pending()
+while True:
+    schedule.run_pending()
