@@ -845,13 +845,13 @@ def oneDay():
                         buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
                         orderApi.place_order(t, marginCoin=coin, size=size, side='open_long', orderType='market', timeInForceValue='normal')
                         buysDict[t]['addLimitBuy'] = True
-                        print(getTime(), t, '롱 예약 매수')
+                        print(getTime(), t, '롱 매수')
                     elif marketPrice <= shortPrice:
                         size = getSize(t)
                         buyPrice = setEndStep(t, round(marketPrice, priceDecimal(t)))
                         orderApi.place_order(t, marginCoin=coin, size=size, side='open_short', orderType='market', timeInForceValue='normal')
                         buysDict[t]['addLimitBuy'] = True
-                        print(getTime(), t, '숏 예약 매수')                
+                        print(getTime(), t, '숏 매수')                
                     
                     
                     
@@ -1046,7 +1046,7 @@ def oneDay():
 
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-# initTickers()
+initTickers()
 schedule.every().day.at("01:01:01").do(lambda: initTickers())
 
 
