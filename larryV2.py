@@ -1046,7 +1046,7 @@ def oneDay():
 
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-# initTickers()
+initTickers()
 schedule.every().day.at("01:00:01").do(lambda: initTickers())
 
 
