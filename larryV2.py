@@ -456,7 +456,9 @@ def getTime():
 
 def getNowStatus(t):
     endTime = int(pydatetime.datetime.now().timestamp()) * 1000
+    time.sleep(0.5)
     historyResult = orderApi.history(t, endTime - (86400 * 1000 * 100), endTime, 1)
+    time.sleep(0.5)
     if historyResult is not None:
         historyList = historyResult['data']['orderList']
         if historyList is not None and len(historyList) > 0:
@@ -773,7 +775,9 @@ def oneDay():
             buysDict[t]['size'] = status['size']
             buysDict[t]['side'] = status['side']
     
+            time.sleep(0.5)
             marketPrice = getMarketPrice(t)
+            time.sleep(0.5)
             if marketPrice is None:
                 continue
             
