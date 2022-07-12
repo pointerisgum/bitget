@@ -1,3 +1,4 @@
+from time import sleep
 import requests
 import json
 from . import consts as c, utils, exceptions
@@ -47,6 +48,7 @@ class Client(object):
         response = None
         if method == c.GET:
             try:
+                sleep(0.1)
                 response = requests.get(url, headers=header)
             except ValueError:
                 print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api return none!!!')
@@ -67,7 +69,7 @@ class Client(object):
         # exception handle
         if not str(response.status_code).startswith('2'):
             # raise exceptions.BitgetAPIException(response)
-            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api error!!!', response)  #여기
+            print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api error!!!', params, response)  #여기
             return None
         try:
             res_header = response.headers

@@ -308,6 +308,7 @@ tickerList = marketApi.tickers(coinType)
 buysDict = {}
 for t in tickerList['data']:
     symbol = t['symbol']
+    # if symbol != 'FILUSDT_UMCBL':
     tickers.append(symbol)
     buysDict[symbol] = {}
 
@@ -456,7 +457,9 @@ def getTime():
 
 def getNowStatus(t):
     endTime = int(pydatetime.datetime.now().timestamp()) * 1000
+    time.sleep(0.5)
     historyResult = orderApi.history(t, endTime - (86400 * 1000 * 100), endTime, 1)
+    time.sleep(0.5)
     if historyResult is not None:
         historyList = historyResult['data']['orderList']
         if historyList is not None and len(historyList) > 0:
@@ -564,7 +567,7 @@ def initTickers():
         # buysDict[t] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(10).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(60).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
@@ -638,7 +641,7 @@ def reserveOrder(t):
     #     return
     
     if currentPrice > longPrice or currentPrice < shortPrice:
-        # print(getTime(), t, '매수 타이밍 지남')
+        print(getTime(), t, '매수 타이밍 지나서 패스')
         return
     
     if longPrice == shortPrice:
@@ -747,7 +750,9 @@ def reserveOrder(t):
 #         tkMargin = 0.3
 
 def getMarketPrice(t):
+    time.sleep(1)
     market = marketApi.market_price(t)
+    time.sleep(0.5)
     if market is None:
         print(getTime(), 'market API is none')
         return None
@@ -1047,7 +1052,7 @@ def oneDay():
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
 initTickers()
-schedule.every().day.at("01:01:01").do(lambda: initTickers())
+# schedule.every().day.at("01:01:01").do(lambda: initTickers())
 
 
 
