@@ -809,9 +809,10 @@ def oneDay():
             
 
             #최소 익절라인 퍼센트는 20%로 설정
-            if per >= 20:
+            minTkPer = 10.0
+            if per >= minTkPer:
                 if bool(buysDict[t].get('maxPer')) == False:
-                    buysDict[t]['maxPer'] = float(20.00)
+                    buysDict[t]['maxPer'] = float(minTkPer)
                     print(getTime(), t, ' ', status['side'], '익절 라인 등록', per)
                 else:
                     oldMaxPer = buysDict[t]['maxPer']
