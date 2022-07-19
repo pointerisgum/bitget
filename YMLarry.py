@@ -445,6 +445,37 @@ def getTime():
     return datetime.now().strftime("%Y/%m/%d, %H:%M:%S")
 
 
+
+def getNowStatus(t):
+    endTime = int(pydatetime.datetime.now().timestamp()) * 1000
+    historyResult = orderApi.history(t, endTime - (86400 * 1000 * 10), endTime, 1)
+    if historyResult is not None:
+        historyList = historyResult['data']['orderList']
+        if historyList is not None and len(historyList) > 0:
+            history = historyList[0]
+            if history['state'] == 'filled':
+                return history
+    else:
+        print('!!history none!!')
+    return None
+
+
+def limitOrderCancel(t):
+    limitList = orderApi.current(t)
+    if limitList is not None:
+        cancelOrders = []
+        for i in range(0, len(limitList['data'])):
+            data = limitList['data'][i]
+            if data['state'] == 'new':
+                orderId = data['orderId']
+                cancelOrders.append(orderId)
+        
+        #등록된 지정가가 있으면 cancel
+        if len(cancelOrders) > 0:
+            orderApi.cancel_batch_orders(t, coin, cancelOrders)
+            print(t, '초기화로 인한 지정가 대기 취소')
+
+
 def initTickers():
     # bot.sendMessage(chat_id=chatId, text='프로그램 초기화')
     print('initTickers()')
@@ -513,37 +544,8 @@ def initTickers():
         tickerDict[t]['short'] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(1).seconds.do(lambda: oneDay())
 
-
-def getNowStatus(t):
-    endTime = int(pydatetime.datetime.now().timestamp()) * 1000
-    historyResult = orderApi.history(t, endTime - (86400 * 1000 * 10), endTime, 1)
-    if historyResult is not None:
-        historyList = historyResult['data']['orderList']
-        if historyList is not None and len(historyList) > 0:
-            history = historyList[0]
-            if history['state'] == 'filled':
-                return history
-    else:
-        print('!!history none!!')
-    return None
-
-
-def limitOrderCancel(t):
-    limitList = orderApi.current(t)
-    if limitList is not None:
-        cancelOrders = []
-        for i in range(0, len(limitList['data'])):
-            data = limitList['data'][i]
-            if data['state'] == 'new':
-                orderId = data['orderId']
-                cancelOrders.append(orderId)
-        
-        #등록된 지정가가 있으면 cancel
-        if len(cancelOrders) > 0:
-            orderApi.cancel_batch_orders(t, coin, cancelOrders)
-            print(t, '초기화로 인한 지정가 대기 취소')
 
 
 def oneDay():
@@ -988,7 +990,7 @@ def oneDay():
 
 oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 schedule.cancel_job(oneDayJob)
-# initTickers()
+initTickers()
 schedule.every().day.at("01:00:01").do(lambda: initTickers())
 
 
