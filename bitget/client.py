@@ -49,7 +49,7 @@ class Client(object):
         if method == c.GET:
             try:
                 sleep(0.1)
-                response = requests.get(url, headers=header)
+                response = requests.get(url, headers=header, timeout=630)
             except ValueError:
                 print(datetime.now().strftime("%Y/%m/%d, %H:%M:%S"), url, '!!!api return none!!!')
                 return None

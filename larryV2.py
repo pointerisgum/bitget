@@ -566,7 +566,7 @@ def initTickers():
         # buysDict[t] = {}
 
         schedule.cancel_job(oneDayJob)
-        oneDayJob = schedule.every(60).seconds.do(lambda: oneDay())
+        oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 
 
 def reserveOrder(t):
