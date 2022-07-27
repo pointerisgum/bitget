@@ -348,7 +348,7 @@ def test(ticker):
     #     ttt = datetime.datetime.fromtimestamp((int(candle_data[i][0]) + granularity*1000)/1000).strftime('%Y-%m-%d %H:%M:%S')
     #     print(ttt)
     
-    candle_data = get_candle(ticker, granularity, 2)
+    candle_data = get_candle(ticker, granularity, 300)
 
     if len(candle_data) <= 0:
         return

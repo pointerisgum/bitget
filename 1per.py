@@ -55,7 +55,7 @@ coin = 'USDT'
 coinType = 'UMCBL'
 # coin = 'SUSDT'
 # coinType = 'SUMCBL'
-leverage = 5
+leverage = 30
 # check_cci = 95
 # excuteMargin = 0.004
 # buyMargin = 0.0004
@@ -215,18 +215,6 @@ def getDealPrice(ticker, orderId):
         time.sleep(0.5)
 
 
-# def getSize(ticker, myAvailable, currentPrice):
-#     return round(((myAvailable * 0.1) * leverage) / currentPrice, 3)
-#     # if ticker == BTC_Ticker:
-#     #     size = str(((myAvailable * 0.1) * leverage) / currentPrice)
-#     #     return size
-#     # elif ticker == ETH_Ticker:
-#     #     size = float(round(((myAvailable * 0.1) * leverage) / currentPrice, 2))
-#     #     return size
-#     # elif ticker == EOS_Ticker:
-#     #     size = int(round(((myAvailable * 0.1) * leverage) / currentPrice, 0))
-#     #     return size
-#     # return 0
 
 
 def getOrderId(result):
@@ -314,15 +302,13 @@ tickerList = marketApi.tickers(coinType)
 #         tickers.append(t['symbol'])
 
 buysDict = {}
-for t in tickerList['data']:
-    symbol = t['symbol']
-    marketPrice = getMarketPrice(symbol)
-    if symbol != 'BTCUSDT_UMCBL':
-        if marketPrice > 10:
-            tickers.append(symbol)
-            buysDict[symbol] = {}
+# for t in tickerList['data']:
+#     symbol = t['symbol']
+#     tickers.append(symbol)
+#     buysDict[symbol] = {}
 
-
+tickers.append('FILUSDT_UMCBL')
+buysDict['FILUSDT_UMCBL'] = {}
 
 # tickerDict = {}
 highRun = []
@@ -404,11 +390,13 @@ def getSize(t):
     # available = 500 #내가 투자 할 총 시드
     # buyAvailable = (available / 2) * (1/len(tickers))
     # buyAvailable = available * (1/len(tickers))
-    if t == 'BTCUSDT_UMCBL':
-        buyAvailable = 200
-    else:
-        buyAvailable = 10
+    # if t == 'BTCUSDT_UMCBL':
+    #     buyAvailable = 200
+    # else:
+    #     buyAvailable = 10
     
+    buyAvailable = 5
+
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
         print('marketPrice is none')
@@ -816,8 +804,7 @@ def oneDay():
                 buyPrice = float(status['priceAvg'])
                 orgPer = round((((marketPrice / buyPrice) * 100) - 100) * multiply, 2)
                 
-                if orgPer >= 1:
-                    #익절시 배수는 다시 1로
+                if orgPer >= 1.1:
                     if side == 'open_long':
                         # buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.001), priceDecimal(t)))
                         # orderApi.place_order(t, marginCoin=coin, size=999999999, side='close_long', orderType='limit', price=buyPrice, timeInForceValue='normal')
@@ -830,10 +817,10 @@ def oneDay():
                         
                     buysDict[t] = {}
                     # buysDict[t]['waiting'] = True
-                    buysDict[t]['multiply'] = 1
+                    buysDict[t]['multiply'] = 1 #익절시 배수는 다시 1로
                     buysDict[t]['position'] = side
                     print(getTime(), t, ' ', side, ' ', '익절')
-                elif orgPer <= -1:
+                elif orgPer <= -0.9:
                     #손절시 현재 배수의 2배                    
                     if side == 'open_long':
                         # buyPrice = setEndStep(t, round(marketPrice + (marketPrice * 0.001), priceDecimal(t)))
@@ -847,7 +834,12 @@ def oneDay():
                     oldMultiply = buysDict[t]['multiply']
                     buysDict[t] = {}
                     # buysDict[t]['waiting'] = True
-                    buysDict[t]['multiply'] = oldMultiply * 2
+                    
+                    if oldMultiply > 4:
+                        buysDict[t]['multiply'] = 1
+                    else:
+                        buysDict[t]['multiply'] = oldMultiply * 2
+                        
                     if side == 'open_long':
                         buysDict[t]['position'] = 'open_short'
                     else:

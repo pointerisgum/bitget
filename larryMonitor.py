@@ -67,16 +67,16 @@ positionApi = position.PositionApi(api_key, secret_key, passphrase, use_server_t
 
 
 
-# while True:
-#     account = accountApi.accounts('umcbl')
-#     if account is not None:
-#         myAvailable = float(account['data'][0]['available'])
-#         equity = float(account['data'][0]['equity'])
-#         print(datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
-#         print(myAvailable)
-#         print(equity)
-#         print()
-#     time.sleep(1)
+while True:
+    account = accountApi.accounts('umcbl')
+    if account is not None:
+        myAvailable = float(account['data'][0]['available'])
+        equity = float(account['data'][0]['equity'])
+        print(datetime.now().strftime("%Y/%m/%d %H:%M:%S"))
+        print(myAvailable)
+        print(equity)
+        print()
+    time.sleep(1)
 
 
 
