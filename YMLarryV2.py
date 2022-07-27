@@ -569,7 +569,7 @@ def initTickers():
         schedule.cancel_job(oneDayJob)
         oneDayJob = schedule.every(120).seconds.do(lambda: oneDay())
 
-#tasd
+#tasdㄴㅁㅇ
 def reserveOrder(t):
     high = 0
     low = 0
