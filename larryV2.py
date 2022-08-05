@@ -388,7 +388,7 @@ def setEndStep(t, price):
     else:
         return price
     
-
+ 
 def getSize(t):
     # available = 500 #내가 투자 할 총 시드
     # buyAvailable = (available / 2) * (1/len(tickers))
