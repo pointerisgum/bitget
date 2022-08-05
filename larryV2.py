@@ -393,10 +393,12 @@ def getSize(t):
     # available = 500 #내가 투자 할 총 시드
     # buyAvailable = (available / 2) * (1/len(tickers))
     # buyAvailable = available * (1/len(tickers))
-    if t == 'BTCUSDT_UMCBL':
-        buyAvailable = 300
-    else:
-        buyAvailable = 50
+    # if t == 'BTCUSDT_UMCBL':
+    #     buyAvailable = 300
+    # else:
+    #     buyAvailable = 50
+    
+    buyAvailable = 50
     
     marketPrice = marketApi.market_price(t)
     if marketPrice is None:
