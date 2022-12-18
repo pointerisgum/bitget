@@ -759,7 +759,7 @@ def getMarketPrice(t):
     
     return float(market['data']['markPrice'])
 
- 
+
 def oneDay():
     for t in tickers:
         # if t == 'ICPUSDT_UMCBL':

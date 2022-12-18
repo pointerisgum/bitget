@@ -658,7 +658,8 @@ def initTickers():
         allCnt = len(tickers)
         allPer = totalPer/allCnt
         print('all per : ', allPer)
-        
+        # 2123
+        #1111
         if isBuyLong == True or isBuyShort == True:
             if isBuyLong == True:
                 if allPer < highPer - 1.2:
