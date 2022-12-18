@@ -691,7 +691,7 @@ def initTickers():
             if upCount < 2 and downCount < 2:
                 init = True
             continue
-            
+        #a
         
         buyCnt = 0 #몇개 살지
         
