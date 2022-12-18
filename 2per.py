@@ -692,7 +692,9 @@ def initTickers():
                 init = True
             continue
             
-            
+        
+        buyCnt = 0 #몇개 살지
+        
         #전체 변동폭이 1.9% 이상일때
         if allPer >= 1.8 or allPer <= -1.8:
             #전체 코인의 75% 이상이 해당될때
@@ -710,6 +712,10 @@ def initTickers():
                         msg = tName + ' // buy long'
                         bot.sendMessage(chat_id=chatId, text=msg)
                         time.sleep(0.5)
+                        #임시로 3개만 사게 함
+                        buyCnt += 1
+                        if buyCnt >= 3:
+                            break
                 isBuyLong = True
                 highPer = allPer
                 init = False
@@ -729,6 +735,10 @@ def initTickers():
                         msg = tName + ' // buy short'
                         bot.sendMessage(chat_id=chatId, text=msg)
                         time.sleep(0.5)
+                        #임시로 3개만 사게 함
+                        buyCnt += 1
+                        if buyCnt >= 3:
+                            break
                 isBuyShort = True
                 highPer = allPer
                 init = False
